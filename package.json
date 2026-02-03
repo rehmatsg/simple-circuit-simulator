@@ -6,7 +6,8 @@
   "scripts": {
     "lint": "tsc -p tsconfig.json --noEmit",
     "build": "tsc -p tsconfig.json --outDir dist",
-    "test": "tsc -p tsconfig.test.json && node --test dist-test/tests/**/*.test.js"
+    "test": "tsc -p tsconfig.test.json && node --test dist-test/tests/**/*.test.js",
+    "bench": "npm run build && node scripts/benchmark.mjs"
   },
   "keywords": [],
   "author": "",

@@ -9,3 +9,4 @@ Files:
 - `solver.md` DC solver behavior and limitations
 - `errors.md` Error and warning code catalog
 - `cookbook.md` Example circuits
+- `performance.md` Performance notes and benchmarks
