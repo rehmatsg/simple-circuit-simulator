@@ -1,6 +1,18 @@
 import { ComponentRegistry } from "./registry.js";
 const BUILTIN_COMPONENTS = [
     {
+        type: "current_source",
+        pins: ["pos", "neg"],
+        props: {
+            current: {
+                kind: "number",
+                unit: "a",
+                required: true,
+                allowUnitless: true,
+            },
+        },
+    },
+    {
         type: "battery",
         pins: ["pos", "neg"],
         props: {

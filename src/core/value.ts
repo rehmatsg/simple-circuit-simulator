@@ -41,6 +41,11 @@ const UNIT_ALIASES: Record<string, Unit> = {
   v: "v",
   volt: "v",
   volts: "v",
+  a: "a",
+  amp: "a",
+  amps: "a",
+  ampere: "a",
+  amperes: "a",
   ohm: "ohm",
   ohms: "ohm",
 };

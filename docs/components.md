@@ -8,6 +8,12 @@ Battery:
 - props:
   - `voltage` number, unit volts (unitless allowed)
 
+Current Source:
+- type: `current_source`
+- pins: `pos`, `neg`
+- props:
+  - `current` number, unit amps (unitless allowed)
+
 Resistor:
 - type: `resistor`
 - pins: `a`, `b`

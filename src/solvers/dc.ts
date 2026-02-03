@@ -174,6 +174,12 @@ function stampMna(netlist: Netlist):
     }
   }
 
+  for (const element of netlist.elements) {
+    if (element.type === "current_source") {
+      stampCurrentSource(element, nodeIndex, rhs);
+    }
+  }
+
   voltageSources.forEach((source, sourceIndex) => {
     stampVoltageSource(source, sourceIndex, nodeIndex, matrix, rhs, nonGroundCount);
   });
@@ -277,6 +283,27 @@ function stampVoltageSource(
   rhs[row] = voltage;
 }
 
+function stampCurrentSource(
+  element: NetlistElement,
+  nodeIndex: Map<number, number>,
+  rhs: number[],
+): void {
+  const [nodeP, nodeN] = element.nodes;
+  const current = element.params.current;
+  if (typeof current !== "number" || !Number.isFinite(current)) {
+    return;
+  }
+  const indexP = nodeIndex.get(nodeP) ?? -1;
+  const indexN = nodeIndex.get(nodeN) ?? -1;
+
+  if (indexP >= 0) {
+    rhs[indexP] = (rhs[indexP] ?? 0) - current;
+  }
+  if (indexN >= 0) {
+    rhs[indexN] = (rhs[indexN] ?? 0) + current;
+  }
+}
+
 function buildNodeVoltages(netlist: Netlist, solution: number[]): Record<string, number> {
   const voltages: Record<string, number> = {};
   const groundNodeId = netlist.groundNodeId;
@@ -323,6 +350,15 @@ function computeElementResults(
         continue;
       }
       const current = voltageDrop / resistance;
+      componentCurrents[element.component] = current;
+      componentPower[element.component] = voltageDrop * current;
+    }
+
+    if (element.type === "current_source") {
+      const current = element.params.current;
+      if (typeof current !== "number" || !Number.isFinite(current)) {
+        continue;
+      }
       componentCurrents[element.component] = current;
       componentPower[element.component] = voltageDrop * current;
     }

@@ -7,6 +7,7 @@ Method:
 Supported elements:
 - Resistor between nodes `a` and `b`
 - Voltage source between `pos` and `neg`
+- Current source between `pos` and `neg`
 - Switch modeled as open or low-resistance (Ron)
 
 Reference node:

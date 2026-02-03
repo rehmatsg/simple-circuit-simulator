@@ -69,6 +69,30 @@ test("buildNetlist converts closed switch to resistor", () => {
     assert.equal(switchElement?.type, "resistor");
     assert.equal(switchElement?.params.resistance, 0.01);
 });
+test("buildNetlist includes current source elements", () => {
+    const circuit = baseCircuit();
+    circuit.addComponent({
+        name: "I1",
+        type: "current_source",
+        pins: { pos: "GND", neg: "N1" },
+        props: { current: "10mA" },
+    });
+    circuit.addComponent({
+        name: "R1",
+        type: "resistor",
+        pins: { a: "N1", b: "GND" },
+        props: { resistance: "1k" },
+    });
+    const result = buildNetlist(circuit, { registry });
+    assert.equal(result.ok, true);
+    if (!result.ok) {
+        return;
+    }
+    const currentElement = result.netlist.elements.find((element) => element.component === "I1");
+    assert.ok(currentElement);
+    assert.equal(currentElement?.type, "current_source");
+    assert.equal(currentElement?.params.current, 0.01);
+});
 test("buildNetlist errors on floating reference", () => {
     const circuit = Circuit.create({
         schemaVersion: 1,

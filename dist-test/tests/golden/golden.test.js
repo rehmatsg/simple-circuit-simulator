@@ -90,6 +90,19 @@ test("golden: short circuit warning", async () => {
     assert.equal(result.status, "ok");
     assert.ok(result.warnings.some((warning) => warning.code === DiagnosticCodes.shortCircuitSuspected));
 });
+test("golden: current source into resistor", async () => {
+    const doc = goldenFixtures.current_source;
+    const imported = importCircuit(doc, { registry });
+    assert.equal(imported.ok, true);
+    if (!imported.ok) {
+        return;
+    }
+    const result = solveDC(imported.circuit, { registry });
+    assert.equal(result.status, "ok");
+    approx(result.nodeVoltages.N1 ?? 0, 10);
+    approx(result.componentCurrents.I1, 0.01);
+    approx(result.componentCurrents.R1, 0.01);
+});
 test("golden: floating circuit without ground", async () => {
     const doc = goldenFixtures.floating_no_ground;
     const imported = importCircuit(doc, { registry });

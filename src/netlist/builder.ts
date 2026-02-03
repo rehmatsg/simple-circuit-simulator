@@ -144,6 +144,8 @@ function buildElementFromComponent(
   errors: Diagnostic[],
 ): NetlistElement | null {
   switch (definition.type) {
+    case "current_source":
+      return buildCurrentSource(component, definition, nodeByName, params, errors);
     case "battery":
       return buildVoltageSource(component, definition, nodeByName, params, errors);
     case "resistor":
@@ -178,6 +180,31 @@ function buildVoltageSource(
     nodes: [pos, neg],
     pins: ["pos", "neg"],
     params: { voltage },
+  };
+}
+
+function buildCurrentSource(
+  component: { name: string; pins: Record<string, string>; props?: Record<string, unknown> },
+  definition: ComponentDefinition,
+  nodeByName: Record<string, number>,
+  params: Record<string, number | string | boolean> | undefined,
+  errors: Diagnostic[],
+): NetlistElement | null {
+  const pos = resolveNode(component, "pos", nodeByName, errors);
+  const neg = resolveNode(component, "neg", nodeByName, errors);
+  const current = resolveNumericProp(component, definition, "current", params, errors);
+  if (pos === null || neg === null || current === null) {
+    return null;
+  }
+
+  return {
+    id: component.name,
+    type: "current_source",
+    component: component.name,
+    originalType: definition.type,
+    nodes: [pos, neg],
+    pins: ["pos", "neg"],
+    params: { current },
   };
 }
 

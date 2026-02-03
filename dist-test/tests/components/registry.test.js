@@ -11,7 +11,7 @@ test("registerBuiltinComponents registers expected types", () => {
     const registry = new ComponentRegistry();
     registerBuiltinComponents(registry);
     const types = registry.list().map((def) => def.type).sort();
-    assert.deepEqual(types, ["battery", "bulb", "resistor", "switch"]);
+    assert.deepEqual(types, ["battery", "bulb", "current_source", "resistor", "switch"]);
 });
 test("createDefaultRegistry returns independent registry", () => {
     const registry = createDefaultRegistry();

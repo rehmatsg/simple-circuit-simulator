@@ -269,6 +269,40 @@ export declare const goldenFixtures: {
             };
         })[];
     };
+    current_source: {
+        schemaVersion: number;
+        sim: {
+            mode: "dc";
+        };
+        groundNet: string;
+        components: ({
+            name: string;
+            type: string;
+            pins: {
+                pos: string;
+                neg: string;
+                a?: never;
+                b?: never;
+            };
+            props: {
+                current: string;
+                resistance?: never;
+            };
+        } | {
+            name: string;
+            type: string;
+            pins: {
+                a: string;
+                b: string;
+                pos?: never;
+                neg?: never;
+            };
+            props: {
+                resistance: string;
+                current?: never;
+            };
+        })[];
+    };
     floating_no_ground: {
         schemaVersion: number;
         sim: {

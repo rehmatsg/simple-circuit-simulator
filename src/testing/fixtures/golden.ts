@@ -164,6 +164,25 @@ export const goldenFixtures = {
       },
     ],
   },
+  current_source: {
+    schemaVersion: 1,
+    sim: { mode: "dc" },
+    groundNet: "GND",
+    components: [
+      {
+        name: "I1",
+        type: "current_source",
+        pins: { pos: "GND", neg: "N1" },
+        props: { current: "10mA" },
+      },
+      {
+        name: "R1",
+        type: "resistor",
+        pins: { a: "N1", b: "GND" },
+        props: { resistance: "1k" },
+      },
+    ],
+  },
   floating_no_ground: {
     schemaVersion: 1,
     sim: { mode: "dc" },

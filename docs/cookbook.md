@@ -41,3 +41,16 @@
   ]
 }
 ```
+
+## Current Source into Resistor
+```json
+{
+  "schemaVersion": 1,
+  "sim": { "mode": "dc" },
+  "groundNet": "GND",
+  "components": [
+    { "name": "I1", "type": "current_source", "pins": { "pos": "GND", "neg": "N1" }, "props": { "current": "10mA" } },
+    { "name": "R1", "type": "resistor", "pins": { "a": "N1", "b": "GND" }, "props": { "resistance": "1k" } }
+  ]
+}
+```
