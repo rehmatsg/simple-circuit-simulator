@@ -20,6 +20,42 @@ const MetaSchema = z
   .record(z.string())
   .describe("Optional metadata for visualization or annotations.");
 
+const WireEndpointSchema = z.discriminatedUnion("kind", [
+  z
+    .object({
+      kind: z.literal("pin"),
+      component: z.string().min(1),
+      pin: z.string().min(1),
+    })
+    .describe("Pin endpoint referencing a component and pin."),
+  z
+    .object({
+      kind: z.literal("junction"),
+      id: z.string().min(1),
+    })
+    .describe("Junction endpoint referencing a junction id."),
+]);
+
+const JunctionSchema = z
+  .object({
+    id: z.string().min(1).describe("Unique junction id."),
+    net: z.string().min(1).describe("Net name the junction belongs to."),
+    meta: MetaSchema.optional(),
+  })
+  .strict()
+  .describe("Wire junction used for UI layout.");
+
+const WireSchema = z
+  .object({
+    id: z.string().min(1).describe("Unique wire id."),
+    net: z.string().min(1).describe("Net name the wire belongs to."),
+    from: WireEndpointSchema.describe("Wire start endpoint."),
+    to: WireEndpointSchema.describe("Wire end endpoint."),
+    meta: MetaSchema.optional(),
+  })
+  .strict()
+  .describe("Wire segment used for UI layout.");
+
 const BaseComponentSchema = z.object({
   name: ComponentNameSchema,
   model: z
@@ -335,6 +371,8 @@ export const CircuitDocumentSchema = z.object({
     .optional()
     .describe("Optional shared parameters for value expressions."),
   meta: MetaSchema.optional().describe("Optional circuit-level metadata."),
+  junctions: z.array(JunctionSchema).optional().describe("Optional wire junctions."),
+  wires: z.array(WireSchema).optional().describe("Optional wire segments."),
 });
 
 export type CircuitDocumentInput = z.input<typeof CircuitDocumentSchema>;

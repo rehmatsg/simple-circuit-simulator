@@ -1,5 +1,6 @@
 import type { ValueExpr } from "./types.js";
 import type { Diagnostic } from "./types.js";
+import type { JunctionDocument, WireDocument } from "./wires.js";
 
 export type SimMode = "dc" | "transient" | "digital" | "hybrid";
 
@@ -11,6 +12,8 @@ export interface CircuitDocument {
   title?: string;
   params?: Record<string, number | string | boolean>;
   meta?: Record<string, string>;
+  junctions?: JunctionDocument[];
+  wires?: WireDocument[];
 }
 
 export interface ComponentDocument {
@@ -29,6 +32,8 @@ export interface CircuitInit {
   title?: string;
   params?: Record<string, number | string | boolean>;
   meta?: Record<string, string>;
+  junctions?: JunctionDocument[];
+  wires?: WireDocument[];
 }
 
 export type CircuitParseResult =
@@ -37,6 +42,8 @@ export type CircuitParseResult =
 
 export class Circuit {
   private readonly components = new Map<string, ComponentDocument>();
+  private readonly junctions: JunctionDocument[] = [];
+  private readonly wires: WireDocument[] = [];
 
   readonly schemaVersion: number;
   readonly sim: { mode: SimMode };
@@ -64,6 +71,18 @@ export class Circuit {
     for (const component of document.components) {
       this.components.set(component.name, cloneComponent(component));
     }
+
+    if (document.junctions) {
+      for (const junction of document.junctions) {
+        this.junctions.push(cloneJunction(junction));
+      }
+    }
+
+    if (document.wires) {
+      for (const wire of document.wires) {
+        this.wires.push(cloneWire(wire));
+      }
+    }
   }
 
   static create(init: CircuitInit): Circuit {
@@ -86,11 +105,27 @@ export class Circuit {
       document.meta = init.meta;
     }
 
+    if (init.junctions) {
+      document.junctions = init.junctions.map(cloneJunction);
+    }
+
+    if (init.wires) {
+      document.wires = init.wires.map(cloneWire);
+    }
+
     return new Circuit(document);
   }
 
   listComponents(): ComponentDocument[] {
     return Array.from(this.components.values()).map(cloneComponent);
+  }
+
+  listJunctions(): JunctionDocument[] {
+    return this.junctions.map(cloneJunction);
+  }
+
+  listWires(): WireDocument[] {
+    return this.wires.map(cloneWire);
   }
 
   getComponent(name: string): ComponentDocument | undefined {
@@ -157,6 +192,30 @@ export class Circuit {
       document.meta = sortRecord(this.meta);
     }
 
+    if (this.junctions.length > 0) {
+      document.junctions = this.junctions
+        .map(cloneJunction)
+        .sort((a, b) => a.id.localeCompare(b.id))
+        .map((junction) => ({
+          id: junction.id,
+          net: junction.net,
+          ...(junction.meta ? { meta: sortRecord(junction.meta) } : {}),
+        }));
+    }
+
+    if (this.wires.length > 0) {
+      document.wires = this.wires
+        .map(cloneWire)
+        .sort((a, b) => a.id.localeCompare(b.id))
+        .map((wire) => ({
+          id: wire.id,
+          net: wire.net,
+          from: normalizeEndpoint(wire.from),
+          to: normalizeEndpoint(wire.to),
+          ...(wire.meta ? { meta: sortRecord(wire.meta) } : {}),
+        }));
+    }
+
     return document;
   }
 }
@@ -169,6 +228,38 @@ function cloneComponent(component: ComponentDocument): ComponentDocument {
     ...(component.props ? { props: { ...component.props } } : {}),
     ...(component.model ? { model: component.model } : {}),
     ...(component.meta ? { meta: { ...component.meta } } : {}),
+  };
+}
+
+function cloneJunction(junction: JunctionDocument): JunctionDocument {
+  return {
+    id: junction.id,
+    net: junction.net,
+    ...(junction.meta ? { meta: { ...junction.meta } } : {}),
+  };
+}
+
+function cloneWire(wire: WireDocument): WireDocument {
+  return {
+    id: wire.id,
+    net: wire.net,
+    from: normalizeEndpoint(wire.from),
+    to: normalizeEndpoint(wire.to),
+    ...(wire.meta ? { meta: { ...wire.meta } } : {}),
+  };
+}
+
+function normalizeEndpoint(endpoint: WireDocument["from"]): WireDocument["from"] {
+  if (endpoint.kind === "pin") {
+    return {
+      kind: "pin",
+      component: endpoint.component,
+      pin: endpoint.pin,
+    };
+  }
+  return {
+    kind: "junction",
+    id: endpoint.id,
   };
 }
 

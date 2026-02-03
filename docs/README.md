@@ -10,4 +10,5 @@ Files:
 - `errors.md` Error and warning code catalog
 - `cookbook.md` Example circuits
 - `llm.md` Zod schema and prompt templates for LLM circuit authoring
+- `wires.md` Wire layout and per-segment current computation
 - `performance.md` Performance notes and benchmarks

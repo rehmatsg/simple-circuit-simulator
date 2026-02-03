@@ -1,5 +1,6 @@
 import type { Diagnostic } from "./types.js";
 import type { CircuitDocument, ComponentDocument, SimMode } from "./circuit.js";
+import type { JunctionDocument, WireDocument, WireEndpoint } from "./wires.js";
 import type { ComponentRegistry, ComponentDefinition, PropDefinition } from "../components/registry.js";
 import { DiagnosticCodes, errorDiagnostic } from "./diagnostics.js";
 import { resolveNumberValue, type ResolveValueOptions } from "./value.js";
@@ -61,6 +62,7 @@ export function validateCircuitDocument(
 
   const registry = options.registry;
   const seenNames = new Set<string>();
+  const componentMap = new Map<string, ComponentDocument>();
 
   for (const component of document.components) {
     validateComponent(component, registry, document.params, errors);
@@ -76,7 +78,12 @@ export function validateCircuitDocument(
     } else {
       seenNames.add(component.name);
     }
+
+    componentMap.set(component.name, component);
   }
+
+  validateJunctions(document.junctions, errors);
+  validateWires(document.wires, document.junctions, componentMap, errors);
 
   return { errors, warnings };
 }
@@ -284,4 +291,197 @@ function validateProps(
       );
     }
   }
+}
+
+function validateJunctions(junctions: JunctionDocument[] | undefined, errors: Diagnostic[]): void {
+  if (junctions === undefined) {
+    return;
+  }
+
+  if (!Array.isArray(junctions)) {
+    errors.push(
+      errorDiagnostic(
+        DiagnosticCodes.invalidJunction,
+        "junctions must be an array.",
+      ),
+    );
+    return;
+  }
+
+  const seen = new Set<string>();
+  for (const junction of junctions) {
+    if (!junction.id || typeof junction.id !== "string") {
+      errors.push(
+        errorDiagnostic(
+          DiagnosticCodes.invalidJunction,
+          "Junction id must be a non-empty string.",
+        ),
+      );
+      continue;
+    }
+    if (!junction.net || typeof junction.net !== "string") {
+      errors.push(
+        errorDiagnostic(
+          DiagnosticCodes.invalidJunction,
+          `Junction "${junction.id}" must have a non-empty net name.`,
+        ),
+      );
+      continue;
+    }
+    if (seen.has(junction.id)) {
+      errors.push(
+        errorDiagnostic(
+          DiagnosticCodes.duplicateJunctionId,
+          `Duplicate junction id "${junction.id}".`,
+        ),
+      );
+    } else {
+      seen.add(junction.id);
+    }
+  }
+}
+
+function validateWires(
+  wires: WireDocument[] | undefined,
+  junctions: JunctionDocument[] | undefined,
+  componentMap: Map<string, ComponentDocument>,
+  errors: Diagnostic[],
+): void {
+  if (wires === undefined) {
+    return;
+  }
+
+  if (!Array.isArray(wires)) {
+    errors.push(
+      errorDiagnostic(
+        DiagnosticCodes.invalidWire,
+        "wires must be an array.",
+      ),
+    );
+    return;
+  }
+
+  const junctionMap = new Map<string, JunctionDocument>();
+  if (junctions) {
+    for (const junction of junctions) {
+      junctionMap.set(junction.id, junction);
+    }
+  }
+
+  const seen = new Set<string>();
+  for (const wire of wires) {
+    if (!wire.id || typeof wire.id !== "string") {
+      errors.push(
+        errorDiagnostic(
+          DiagnosticCodes.invalidWire,
+          "Wire id must be a non-empty string.",
+        ),
+      );
+      continue;
+    }
+    if (!wire.net || typeof wire.net !== "string") {
+      errors.push(
+        errorDiagnostic(
+          DiagnosticCodes.invalidWire,
+          `Wire "${wire.id}" must have a non-empty net name.`,
+        ),
+      );
+      continue;
+    }
+    if (seen.has(wire.id)) {
+      errors.push(
+        errorDiagnostic(
+          DiagnosticCodes.duplicateWireId,
+          `Duplicate wire id "${wire.id}".`,
+        ),
+      );
+    } else {
+      seen.add(wire.id);
+    }
+
+    validateWireEndpoint(wire, wire.from, "from", wire.net, junctionMap, componentMap, errors);
+    validateWireEndpoint(wire, wire.to, "to", wire.net, junctionMap, componentMap, errors);
+  }
+}
+
+function validateWireEndpoint(
+  wire: WireDocument,
+  endpoint: WireEndpoint,
+  label: "from" | "to",
+  net: string,
+  junctionMap: Map<string, JunctionDocument>,
+  componentMap: Map<string, ComponentDocument>,
+  errors: Diagnostic[],
+): void {
+  if (!endpoint || typeof endpoint !== "object") {
+    errors.push(
+      errorDiagnostic(
+        DiagnosticCodes.invalidWireEndpoint,
+        `Wire "${wire.id}" ${label} endpoint is invalid.`,
+      ),
+    );
+    return;
+  }
+
+  if (endpoint.kind === "junction") {
+    const junction = junctionMap.get(endpoint.id);
+    if (!junction) {
+      errors.push(
+        errorDiagnostic(
+          DiagnosticCodes.invalidWireEndpoint,
+          `Wire "${wire.id}" references missing junction "${endpoint.id}".`,
+        ),
+      );
+      return;
+    }
+    if (junction.net !== net) {
+      errors.push(
+        errorDiagnostic(
+          DiagnosticCodes.wireNetMismatch,
+          `Wire "${wire.id}" net "${net}" does not match junction "${endpoint.id}" net "${junction.net}".`,
+        ),
+      );
+    }
+    return;
+  }
+
+  if (endpoint.kind === "pin") {
+    const component = componentMap.get(endpoint.component);
+    if (!component) {
+      errors.push(
+        errorDiagnostic(
+          DiagnosticCodes.invalidWireEndpoint,
+          `Wire "${wire.id}" references missing component "${endpoint.component}".`,
+        ),
+      );
+      return;
+    }
+    const pinNet = component.pins[endpoint.pin];
+    if (!pinNet) {
+      errors.push(
+        errorDiagnostic(
+          DiagnosticCodes.invalidWireEndpoint,
+          `Wire "${wire.id}" references missing pin "${endpoint.pin}" on component "${endpoint.component}".`,
+        ),
+      );
+      return;
+    }
+    if (pinNet !== net) {
+      errors.push(
+        errorDiagnostic(
+          DiagnosticCodes.wireNetMismatch,
+          `Wire "${wire.id}" net "${net}" does not match pin net "${pinNet}".`,
+          { component: endpoint.component, net: pinNet },
+        ),
+      );
+    }
+    return;
+  }
+
+  errors.push(
+    errorDiagnostic(
+      DiagnosticCodes.invalidWireEndpoint,
+      `Wire "${wire.id}" ${label} endpoint kind is invalid.`,
+    ),
+  );
 }

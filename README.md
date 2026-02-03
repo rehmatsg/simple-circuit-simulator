@@ -11,6 +11,7 @@ UI-agnostic TypeScript library for simulating electrical circuits using real cir
 - CMOS gate stacks with expansion (NOT/NAND/NOR) and composite logic (AND/OR/XOR/adders)
 - Deterministic results with golden tests
 - LLM-friendly Zod schema and prompt templates
+- Optional wire layout with per-segment current computation
 
 ## Installation
 This repo is intended for local development and embedding:
@@ -47,6 +48,15 @@ if (!imported.ok) {
   const result = solveDC(imported.circuit, { registry });
   console.log(result.nodeVoltages, result.componentCurrents);
 }
+```
+
+## Wire Currents (Optional)
+If you provide `wires` and `junctions` in the JSON, you can compute per-segment currents:
+```ts
+import { computeWireCurrents } from "./index.js";
+
+const wireResult = computeWireCurrents(imported.circuit, result);
+console.log(wireResult.wireCurrents);
 ```
 
 ## LLM Authoring Support

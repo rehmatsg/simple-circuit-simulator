@@ -40,6 +40,10 @@ test("solveDC computes resistor across battery", () => {
   approxValue(result.nodeVoltages.GND, 0);
   approx(result.componentCurrents.R1 as number, 0.009);
   approx(result.componentCurrents.B1 as number, 0.009);
+  approx((result.componentPinCurrents.R1?.a ?? 0), 0.009);
+  approx((result.componentPinCurrents.R1?.b ?? 0), -0.009);
+  approx((result.componentPinCurrents.B1?.pos ?? 0), -0.009);
+  approx((result.componentPinCurrents.B1?.neg ?? 0), 0.009);
 });
 
 test("solveDC computes voltage divider", () => {

@@ -137,3 +137,60 @@ test("validateCircuitDocument flags missing ground and invalid sim mode", () => 
   assert.ok(result.errors.some((err) => err.code === DiagnosticCodes.missingGround));
   assert.ok(result.errors.some((err) => err.code === DiagnosticCodes.invalidSimMode));
 });
+
+test("validateCircuitDocument detects duplicate wire ids", () => {
+  const document: CircuitDocument = {
+    ...baseDocument,
+    wires: [
+      {
+        id: "W1",
+        net: "N1",
+        from: { kind: "pin", component: "R1", pin: "a" },
+        to: { kind: "pin", component: "R1", pin: "b" },
+      },
+      {
+        id: "W1",
+        net: "N1",
+        from: { kind: "pin", component: "R1", pin: "a" },
+        to: { kind: "pin", component: "R1", pin: "b" },
+      },
+    ],
+  };
+
+  const result = validateCircuitDocument(document, { registry });
+  assert.ok(result.errors.some((err) => err.code === DiagnosticCodes.duplicateWireId));
+});
+
+test("validateCircuitDocument flags wire net mismatch", () => {
+  const document: CircuitDocument = {
+    ...baseDocument,
+    wires: [
+      {
+        id: "W1",
+        net: "VCC",
+        from: { kind: "pin", component: "R1", pin: "a" },
+        to: { kind: "pin", component: "R1", pin: "b" },
+      },
+    ],
+  };
+
+  const result = validateCircuitDocument(document, { registry });
+  assert.ok(result.errors.some((err) => err.code === DiagnosticCodes.wireNetMismatch));
+});
+
+test("validateCircuitDocument flags missing junction endpoint", () => {
+  const document: CircuitDocument = {
+    ...baseDocument,
+    wires: [
+      {
+        id: "W1",
+        net: "N1",
+        from: { kind: "junction", id: "J1" },
+        to: { kind: "pin", component: "R1", pin: "a" },
+      },
+    ],
+  };
+
+  const result = validateCircuitDocument(document, { registry });
+  assert.ok(result.errors.some((err) => err.code === DiagnosticCodes.invalidWireEndpoint));
+});

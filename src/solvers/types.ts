@@ -11,6 +11,7 @@ export interface SimulationResult {
   mode: "dc" | "transient" | "digital" | "hybrid";
   nodeVoltages: Record<string, number>;
   componentCurrents: Record<string, number | Record<string, number>>;
+  componentPinCurrents: Record<string, Record<string, number>>;
   componentPower: Record<string, number>;
   errors: DiagnosticMessage[];
   warnings: DiagnosticMessage[];

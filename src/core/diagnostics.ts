@@ -27,6 +27,16 @@ export const DiagnosticCodes = {
   unknownParameter: "unknown_parameter",
   unitMismatch: "unit_mismatch",
   unknownUnit: "unknown_unit",
+  duplicateWireId: "duplicate_wire_id",
+  duplicateJunctionId: "duplicate_junction_id",
+  invalidWire: "invalid_wire",
+  invalidJunction: "invalid_junction",
+  invalidWireEndpoint: "invalid_wire_endpoint",
+  wireNetMismatch: "wire_net_mismatch",
+  wireLayoutMissing: "wire_layout_missing",
+  wireGraphDisconnected: "wire_graph_disconnected",
+  wireCurrentsRequiresOk: "wire_currents_requires_ok",
+  wireMissingPinCurrent: "wire_missing_pin_current",
 } as const;
 
 export type DiagnosticCode = (typeof DiagnosticCodes)[keyof typeof DiagnosticCodes];

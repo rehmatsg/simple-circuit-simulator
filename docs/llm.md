@@ -42,3 +42,4 @@ Description:
 - Use `gate_*` components for digital truth-table simulation with `solveDigital`.
 - Keep net names simple: `VDD`, `VCC`, `GND`, `N1`, `OUT`, etc.
 - Use `params` for shared values and reference them with `$PARAM_NAME`.
+- Wire layout is optional. If requested, include `junctions` and `wires` to match the UI segments.

@@ -19,6 +19,7 @@ Outputs:
 - Node voltages relative to ground
 - Component currents
 - Component power
+- Component pin currents (net → component sign convention)
 - Structured errors and warnings
 
 Warnings:
@@ -30,3 +31,7 @@ Limitations:
  - Digital mode uses truth-table evaluation (no timing or propagation delays yet).
  - Transient solver is a placeholder; capacitor/inductor dynamics will be added in a future phase.
 - Dense solver is used; no sparse optimization yet.
+
+Wire currents:
+- Per-segment wire currents are computed separately with `computeWireCurrents`.
+- Wire layout data is optional and does not affect the solver.

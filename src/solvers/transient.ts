@@ -98,6 +98,7 @@ function buildTransientError(
         mode: "transient",
         nodeVoltages: {},
         componentCurrents: {},
+        componentPinCurrents: {},
         componentPower: {},
         errors: sortDiagnostics(errors.map(asMessage)),
         warnings: sortDiagnostics(warnings.map(asMessage)),

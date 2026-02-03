@@ -79,7 +79,7 @@ export function solveDC(
 
   const { solution, voltageSourceOrder, nonGroundCount } = stampResult;
   const nodeVoltages = buildNodeVoltages(netlist, solution);
-  const { componentCurrents, componentPower } = computeElementResults(
+  const { componentCurrents, componentPinCurrents, componentPower } = computeElementResults(
     netlist,
     nodeVoltages,
     solution,
@@ -111,6 +111,7 @@ export function solveDC(
     mode: "dc",
     nodeVoltages,
     componentCurrents,
+    componentPinCurrents,
     componentPower,
     errors: [],
     warnings: sortDiagnostics(
@@ -157,6 +158,7 @@ function buildErrorResult(
     mode,
     nodeVoltages: {},
     componentCurrents: {},
+    componentPinCurrents: {},
     componentPower: {},
     errors: sortDiagnostics(errors.map(asMessage)),
     warnings: sortDiagnostics(warnings.map(asMessage)),
@@ -624,9 +626,11 @@ function computeElementResults(
   nonGroundCount: number,
 ): {
   componentCurrents: Record<string, number>;
+  componentPinCurrents: Record<string, Record<string, number>>;
   componentPower: Record<string, number>;
 } {
   const componentCurrents: Record<string, number> = {};
+  const componentPinCurrents: Record<string, Record<string, number>> = {};
   const componentPower: Record<string, number> = {};
   const nodeNameById = new Map<number, string>();
   for (const node of netlist.nodes) {
@@ -646,6 +650,7 @@ function computeElementResults(
       }
       const current = voltageDrop / resistance;
       componentCurrents[element.component] = current;
+      recordPinCurrents(componentPinCurrents, element.component, element.pins, current);
       componentPower[element.component] = voltageDrop * current;
     }
 
@@ -655,6 +660,7 @@ function computeElementResults(
         continue;
       }
       componentCurrents[element.component] = current;
+      recordPinCurrents(componentPinCurrents, element.component, element.pins, current);
       componentPower[element.component] = voltageDrop * current;
     }
 
@@ -664,6 +670,7 @@ function computeElementResults(
         continue;
       }
       componentCurrents[element.component] = diodeCurrent;
+      recordPinCurrents(componentPinCurrents, element.component, element.pins, diodeCurrent);
       componentPower[element.component] = voltageDrop * diodeCurrent;
     }
 
@@ -673,6 +680,7 @@ function computeElementResults(
         continue;
       }
       componentCurrents[element.component] = mosfetCurrent;
+      recordPinCurrents(componentPinCurrents, element.component, element.pins, mosfetCurrent);
       componentPower[element.component] = voltageDrop * mosfetCurrent;
     }
   }
@@ -686,10 +694,49 @@ function computeElementResults(
     const voltageB = nodeVoltages[nodeNameById.get(nodeB) ?? ""] ?? 0;
     const voltageDrop = voltageA - voltageB;
     componentCurrents[element.component] = current;
+    recordVoltageSourcePinCurrents(componentPinCurrents, element.component, element.pins, current);
     componentPower[element.component] = voltageDrop * current;
   });
 
-  return { componentCurrents, componentPower };
+  return { componentCurrents, componentPinCurrents, componentPower };
+}
+
+function recordPinCurrents(
+  componentPinCurrents: Record<string, Record<string, number>>,
+  component: string,
+  pins: string[] | undefined,
+  current: number,
+): void {
+  if (!pins || pins.length < 2) {
+    return;
+  }
+  const [pinA, pinB] = pins;
+  if (!pinA || !pinB) {
+    return;
+  }
+  const pinMap = componentPinCurrents[component] ?? {};
+  pinMap[pinA] = (pinMap[pinA] ?? 0) + current;
+  pinMap[pinB] = (pinMap[pinB] ?? 0) - current;
+  componentPinCurrents[component] = pinMap;
+}
+
+function recordVoltageSourcePinCurrents(
+  componentPinCurrents: Record<string, Record<string, number>>,
+  component: string,
+  pins: string[] | undefined,
+  current: number,
+): void {
+  if (!pins || pins.length < 2) {
+    return;
+  }
+  const [pinPos, pinNeg] = pins;
+  if (!pinPos || !pinNeg) {
+    return;
+  }
+  const pinMap = componentPinCurrents[component] ?? {};
+  pinMap[pinPos] = (pinMap[pinPos] ?? 0) - current;
+  pinMap[pinNeg] = (pinMap[pinNeg] ?? 0) + current;
+  componentPinCurrents[component] = pinMap;
 }
 
 function computeDiodeCurrent(element: NetlistElement, voltageDrop: number): number | null {

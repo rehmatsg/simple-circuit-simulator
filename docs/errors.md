@@ -25,9 +25,19 @@ Errors:
 - `unknown_unit`
 - `floating_reference`
 - `singular_matrix`
+- `duplicate_wire_id`
+- `duplicate_junction_id`
+- `invalid_wire`
+- `invalid_junction`
+- `invalid_wire_endpoint`
+- `wire_net_mismatch`
+- `wire_graph_disconnected`
+- `wire_currents_requires_ok`
+- `wire_missing_pin_current`
 
 Warnings:
 - `short_circuit_suspected`
+- `wire_layout_missing`
 
 Notes:
 - Errors and warnings are returned as structured diagnostics with optional `component` and `net` fields.
