@@ -48,6 +48,18 @@ LED:
   - `n` emission coefficient (unitless)
   - `vt` thermal voltage (volts)
 
+Gate AND:
+- type: `gate_and`
+- pins: `in1`, `in2`, `out`
+
+Gate OR:
+- type: `gate_or`
+- pins: `in1`, `in2`, `out`
+
+Gate NOT:
+- type: `gate_not`
+- pins: `in1`, `out`
+
 Notes:
 - Closed switch is modeled as a resistor with configurable `Ron` (default 1e-3).
 - Open switch is treated as no connection.

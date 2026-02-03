@@ -54,3 +54,15 @@
   ]
 }
 ```
+
+## Simple AND Gate
+```json
+{
+  "schemaVersion": 1,
+  "sim": { "mode": "digital" },
+  "groundNet": "GND",
+  "components": [
+    { "name": "G1", "type": "gate_and", "pins": { "in1": "A", "in2": "B", "out": "Y" } }
+  ]
+}
+```

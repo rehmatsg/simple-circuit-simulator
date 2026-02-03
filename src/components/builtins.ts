@@ -70,6 +70,43 @@ const BUILTIN_COMPONENTS: ComponentDefinition[] = [
     },
   },
   {
+    type: "gate_and",
+    pins: ["in1", "in2", "out"],
+    requiredPins: ["in1", "in2", "out"],
+  },
+  {
+    type: "gate_or",
+    pins: ["in1", "in2", "out"],
+    requiredPins: ["in1", "in2", "out"],
+  },
+  {
+    type: "gate_not",
+    pins: ["in1", "out"],
+    requiredPins: ["in1", "out"],
+  },
+  {
+    type: "capacitor",
+    pins: ["a", "b"],
+    props: {
+      capacitance: {
+        kind: "number",
+        required: true,
+        allowUnitless: true
+      }
+    }
+  },
+  {
+    type: "inductor",
+    pins: ["a", "b"],
+    props: {
+      inductance: {
+        kind: "number",
+        required: true,
+        allowUnitless: true
+      }
+    }
+  },
+  {
     type: "battery",
     pins: ["pos", "neg"],
     props: {
