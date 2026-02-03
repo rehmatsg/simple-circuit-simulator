@@ -2,12 +2,20 @@
   "name": "simple-circuit-simulator",
   "version": "1.0.0",
   "type": "module",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
   "scripts": {
     "lint": "tsc -p tsconfig.json --noEmit",
     "build": "tsc -p tsconfig.json --outDir dist",
     "test": "tsc -p tsconfig.test.json && node --test dist-test/tests/**/*.test.js",
-    "bench": "npm run build && node scripts/benchmark.mjs"
+    "bench": "npm run build && node scripts/benchmark.mjs",
+    "prepare": "npm run build"
   },
   "keywords": [],
   "author": "",
@@ -19,5 +27,9 @@
   },
   "dependencies": {
     "zod": "^3.25.76"
-  }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ]
 }
