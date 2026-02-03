@@ -28,4 +28,5 @@ Limitations:
 - DC only in v1/v2 (no capacitors or inductors yet).
 - Nonlinear devices use Newton-Raphson with configurable iteration limits.
  - Digital mode uses truth-table evaluation (no timing or propagation delays yet).
+ - Transient solver is a placeholder; capacitor/inductor dynamics will be added in a future phase.
 - Dense solver is used; no sparse optimization yet.

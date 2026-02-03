@@ -18,6 +18,12 @@ const UNIT_ALIASES = {
     amps: "a",
     ampere: "a",
     amperes: "a",
+    f: "f",
+    farad: "f",
+    farads: "f",
+    h: "h",
+    henry: "h",
+    henries: "h",
     ohm: "ohm",
     ohms: "ohm",
 };

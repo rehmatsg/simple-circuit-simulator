@@ -14,4 +14,4 @@ export interface Diagnostic extends DiagnosticMessage {
   severity: DiagnosticSeverity;
 }
 
-export type Unit = "ohm" | "v" | "a";
+export type Unit = "ohm" | "v" | "a" | "f" | "h";

@@ -149,6 +149,10 @@ function buildElementFromComponent(
     case "diode":
     case "led":
       return buildDiode(component, definition, nodeByName, params, errors);
+    case "capacitor":
+      return buildCapacitor(component, definition, nodeByName, params, errors);
+    case "inductor":
+      return buildInductor(component, definition, nodeByName, params, errors);
     case "battery":
       return buildVoltageSource(component, definition, nodeByName, params, errors);
     case "resistor":
@@ -159,6 +163,78 @@ function buildElementFromComponent(
     default:
       return null;
   }
+}
+
+function buildCapacitor(
+  component: { name: string; pins: Record<string, string>; props?: Record<string, unknown> },
+  definition: ComponentDefinition,
+  nodeByName: Record<string, number>,
+  params: Record<string, number | string | boolean> | undefined,
+  errors: Diagnostic[],
+): NetlistElement | null {
+  const a = resolveNode(component, "a", nodeByName, errors);
+  const b = resolveNode(component, "b", nodeByName, errors);
+  const capacitance = resolveNumericProp(component, definition, "capacitance", params, errors);
+  if (a === null || b === null || capacitance === null) {
+    return null;
+  }
+
+  if (capacitance <= 0) {
+    errors.push(
+      errorDiagnostic(
+        DiagnosticCodes.invalidPropertyValue,
+        `Invalid capacitance value for component \"${component.name}\".`,
+        { component: component.name, details: { capacitance } },
+      ),
+    );
+    return null;
+  }
+
+  return {
+    id: component.name,
+    type: "capacitor",
+    component: component.name,
+    originalType: definition.type,
+    nodes: [a, b],
+    pins: ["a", "b"],
+    params: { capacitance },
+  };
+}
+
+function buildInductor(
+  component: { name: string; pins: Record<string, string>; props?: Record<string, unknown> },
+  definition: ComponentDefinition,
+  nodeByName: Record<string, number>,
+  params: Record<string, number | string | boolean> | undefined,
+  errors: Diagnostic[],
+): NetlistElement | null {
+  const a = resolveNode(component, "a", nodeByName, errors);
+  const b = resolveNode(component, "b", nodeByName, errors);
+  const inductance = resolveNumericProp(component, definition, "inductance", params, errors);
+  if (a === null || b === null || inductance === null) {
+    return null;
+  }
+
+  if (inductance <= 0) {
+    errors.push(
+      errorDiagnostic(
+        DiagnosticCodes.invalidPropertyValue,
+        `Invalid inductance value for component \"${component.name}\".`,
+        { component: component.name, details: { inductance } },
+      ),
+    );
+    return null;
+  }
+
+  return {
+    id: component.name,
+    type: "inductor",
+    component: component.name,
+    originalType: definition.type,
+    nodes: [a, b],
+    pins: ["a", "b"],
+    params: { inductance },
+  };
 }
 
 function buildVoltageSource(

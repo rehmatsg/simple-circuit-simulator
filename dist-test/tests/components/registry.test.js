@@ -14,11 +14,13 @@ test("registerBuiltinComponents registers expected types", () => {
     assert.deepEqual(types, [
         "battery",
         "bulb",
+        "capacitor",
         "current_source",
         "diode",
         "gate_and",
         "gate_not",
         "gate_or",
+        "inductor",
         "led",
         "resistor",
         "switch",

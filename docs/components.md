@@ -60,6 +60,18 @@ Gate NOT:
 - type: `gate_not`
 - pins: `in1`, `out`
 
+Capacitor:
+- type: `capacitor`
+- pins: `a`, `b`
+- props:
+  - `capacitance` number, unit farads (unitless allowed)
+
+Inductor:
+- type: `inductor`
+- pins: `a`, `b`
+- props:
+  - `inductance` number, unit henries (unitless allowed)
+
 Notes:
 - Closed switch is modeled as a resistor with configurable `Ron` (default 1e-3).
 - Open switch is treated as no connection.

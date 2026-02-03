@@ -90,10 +90,11 @@ const BUILTIN_COMPONENTS: ComponentDefinition[] = [
     props: {
       capacitance: {
         kind: "number",
+        unit: "f",
         required: true,
-        allowUnitless: true
-      }
-    }
+        allowUnitless: true,
+      },
+    },
   },
   {
     type: "inductor",
@@ -101,10 +102,11 @@ const BUILTIN_COMPONENTS: ComponentDefinition[] = [
     props: {
       inductance: {
         kind: "number",
+        unit: "h",
         required: true,
-        allowUnitless: true
-      }
-    }
+        allowUnitless: true,
+      },
+    },
   },
   {
     type: "battery",

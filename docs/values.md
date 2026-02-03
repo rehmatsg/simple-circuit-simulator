@@ -17,6 +17,8 @@ Engineering prefixes:
 Units (v1):
 - volts: `V`, `volt`, `volts`
 - amps: `A`, `amp`, `amps`, `ampere`, `amperes`
+- farads: `F`, `farad`, `farads`
+- henries: `H`, `henry`, `henries`
 - ohms: `ohm`, `ohms`
 
 Rules:

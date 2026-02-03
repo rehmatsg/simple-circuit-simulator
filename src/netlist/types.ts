@@ -1,6 +1,6 @@
 export type NodeId = number;
 
-export type ElementType = "resistor" | "voltage_source" | "current_source" | "diode";
+export type ElementType = "resistor" | "voltage_source" | "current_source" | "diode" | "capacitor" | "inductor";
 
 export interface TerminalRef {
   component: string;

@@ -46,6 +46,12 @@ const UNIT_ALIASES: Record<string, Unit> = {
   amps: "a",
   ampere: "a",
   amperes: "a",
+  f: "f",
+  farad: "f",
+  farads: "f",
+  h: "h",
+  henry: "h",
+  henries: "h",
   ohm: "ohm",
   ohms: "ohm",
 };

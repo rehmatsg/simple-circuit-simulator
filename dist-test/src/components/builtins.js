@@ -84,6 +84,30 @@ const BUILTIN_COMPONENTS = [
         requiredPins: ["in1", "out"],
     },
     {
+        type: "capacitor",
+        pins: ["a", "b"],
+        props: {
+            capacitance: {
+                kind: "number",
+                unit: "f",
+                required: true,
+                allowUnitless: true,
+            },
+        },
+    },
+    {
+        type: "inductor",
+        pins: ["a", "b"],
+        props: {
+            inductance: {
+                kind: "number",
+                unit: "h",
+                required: true,
+                allowUnitless: true,
+            },
+        },
+    },
+    {
         type: "battery",
         pins: ["pos", "neg"],
         props: {

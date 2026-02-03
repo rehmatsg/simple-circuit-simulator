@@ -12,3 +12,4 @@ export * from "./src/solvers/types.js";
 export * from "./src/solvers/linear.js";
 export * from "./src/solvers/dc.js";
 export * from "./src/solvers/digital.js";
+export * from "./src/solvers/transient.js";
