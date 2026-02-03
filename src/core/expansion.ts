@@ -7,6 +7,7 @@ export interface ExpansionOptions {
 }
 
 const MAX_EXPANSION_PASSES = 6;
+const INTERNAL_NET_PREFIX = "__int";
 
 export function expandCmosGates(
   document: CircuitDocument,
@@ -177,16 +178,18 @@ function buildInverter(
   nextId: (prefix: string) => string,
 ): ComponentDocument[] {
   return [
-    {
-      name: nextId(`${base}_p`),
-      type: "mosfet_p",
-      pins: { d: output, g: input, s: vdd, b: vdd },
-    },
-    {
-      name: nextId(`${base}_n`),
-      type: "mosfet_n",
-      pins: { d: output, g: input, s: gnd, b: gnd },
-    },
+    makeMosfet(
+      nextId(`${base}_p`),
+      "mosfet_p",
+      { d: output, g: input, s: vdd, b: vdd },
+      mosfetMeta(base, "cmos_not", "pull_up", "single"),
+    ),
+    makeMosfet(
+      nextId(`${base}_n`),
+      "mosfet_n",
+      { d: output, g: input, s: gnd, b: gnd },
+      mosfetMeta(base, "cmos_not", "pull_down", "single"),
+    ),
   ];
 }
 
@@ -199,28 +202,32 @@ function buildNand(
   gnd: string,
   nextId: (prefix: string) => string,
 ): ComponentDocument[] {
-  const nMid = `${base}_nmid`;
+  const nMid = internalNet(base, "nmid");
   return [
-    {
-      name: nextId(`${base}_p1`),
-      type: "mosfet_p",
-      pins: { d: output, g: in1, s: vdd, b: vdd },
-    },
-    {
-      name: nextId(`${base}_p2`),
-      type: "mosfet_p",
-      pins: { d: output, g: in2, s: vdd, b: vdd },
-    },
-    {
-      name: nextId(`${base}_n1`),
-      type: "mosfet_n",
-      pins: { d: output, g: in1, s: nMid, b: gnd },
-    },
-    {
-      name: nextId(`${base}_n2`),
-      type: "mosfet_n",
-      pins: { d: nMid, g: in2, s: gnd, b: gnd },
-    },
+    makeMosfet(
+      nextId(`${base}_p1`),
+      "mosfet_p",
+      { d: output, g: in1, s: vdd, b: vdd },
+      mosfetMeta(base, "cmos_nand", "pull_up", "parallel", "1"),
+    ),
+    makeMosfet(
+      nextId(`${base}_p2`),
+      "mosfet_p",
+      { d: output, g: in2, s: vdd, b: vdd },
+      mosfetMeta(base, "cmos_nand", "pull_up", "parallel", "2"),
+    ),
+    makeMosfet(
+      nextId(`${base}_n1`),
+      "mosfet_n",
+      { d: output, g: in1, s: nMid, b: gnd },
+      mosfetMeta(base, "cmos_nand", "pull_down", "series", "1"),
+    ),
+    makeMosfet(
+      nextId(`${base}_n2`),
+      "mosfet_n",
+      { d: nMid, g: in2, s: gnd, b: gnd },
+      mosfetMeta(base, "cmos_nand", "pull_down", "series", "2"),
+    ),
   ];
 }
 
@@ -233,28 +240,32 @@ function buildNor(
   gnd: string,
   nextId: (prefix: string) => string,
 ): ComponentDocument[] {
-  const pMid = `${base}_pmid`;
+  const pMid = internalNet(base, "pmid");
   return [
-    {
-      name: nextId(`${base}_p1`),
-      type: "mosfet_p",
-      pins: { d: output, g: in1, s: pMid, b: vdd },
-    },
-    {
-      name: nextId(`${base}_p2`),
-      type: "mosfet_p",
-      pins: { d: pMid, g: in2, s: vdd, b: vdd },
-    },
-    {
-      name: nextId(`${base}_n1`),
-      type: "mosfet_n",
-      pins: { d: output, g: in1, s: gnd, b: gnd },
-    },
-    {
-      name: nextId(`${base}_n2`),
-      type: "mosfet_n",
-      pins: { d: output, g: in2, s: gnd, b: gnd },
-    },
+    makeMosfet(
+      nextId(`${base}_p1`),
+      "mosfet_p",
+      { d: output, g: in1, s: pMid, b: vdd },
+      mosfetMeta(base, "cmos_nor", "pull_up", "series", "1"),
+    ),
+    makeMosfet(
+      nextId(`${base}_p2`),
+      "mosfet_p",
+      { d: pMid, g: in2, s: vdd, b: vdd },
+      mosfetMeta(base, "cmos_nor", "pull_up", "series", "2"),
+    ),
+    makeMosfet(
+      nextId(`${base}_n1`),
+      "mosfet_n",
+      { d: output, g: in1, s: gnd, b: gnd },
+      mosfetMeta(base, "cmos_nor", "pull_down", "parallel", "1"),
+    ),
+    makeMosfet(
+      nextId(`${base}_n2`),
+      "mosfet_n",
+      { d: output, g: in2, s: gnd, b: gnd },
+      mosfetMeta(base, "cmos_nor", "pull_down", "parallel", "2"),
+    ),
   ];
 }
 
@@ -265,7 +276,7 @@ function buildAnd(
   output: string,
   nextId: (prefix: string) => string,
 ): ComponentDocument[] {
-  const nandOut = `${base}_nand`;
+  const nandOut = internalNet(base, "nand");
   return [
     {
       name: nextId(`${base}_nand`),
@@ -287,7 +298,7 @@ function buildOr(
   output: string,
   nextId: (prefix: string) => string,
 ): ComponentDocument[] {
-  const norOut = `${base}_nor`;
+  const norOut = internalNet(base, "nor");
   return [
     {
       name: nextId(`${base}_nor`),
@@ -309,9 +320,9 @@ function buildXor(
   output: string,
   nextId: (prefix: string) => string,
 ): ComponentDocument[] {
-  const n1 = `${base}_n1`;
-  const n2 = `${base}_n2`;
-  const n3 = `${base}_n3`;
+  const n1 = internalNet(base, "n1");
+  const n2 = internalNet(base, "n2");
+  const n3 = internalNet(base, "n3");
   return [
     {
       name: nextId(`${base}_nand1`),
@@ -367,9 +378,9 @@ function buildFullAdder(
   cout: string,
   nextId: (prefix: string) => string,
 ): ComponentDocument[] {
-  const xor1 = `${base}_xor1`;
-  const and1 = `${base}_and1`;
-  const and2 = `${base}_and2`;
+  const xor1 = internalNet(base, "xor1");
+  const and1 = internalNet(base, "and1");
+  const and2 = internalNet(base, "and2");
   return [
     {
       name: nextId(`${base}_xor1`),
@@ -397,6 +408,45 @@ function buildFullAdder(
       pins: { in1: and1, in2: and2, out: cout },
     },
   ];
+}
+
+function internalNet(base: string, label: string): string {
+  return `${base}${INTERNAL_NET_PREFIX}_${label}`;
+}
+
+function makeMosfet(
+  name: string,
+  type: "mosfet_n" | "mosfet_p",
+  pins: Record<string, string>,
+  meta: Record<string, string>,
+): ComponentDocument {
+  return {
+    name,
+    type,
+    pins,
+    meta,
+  };
+}
+
+function mosfetMeta(
+  gate: string,
+  gateType: string,
+  role: "pull_up" | "pull_down",
+  stack: "single" | "series" | "parallel",
+  stackIndex?: string,
+): Record<string, string> {
+  const meta: Record<string, string> = {
+    gate,
+    gateType,
+    role,
+    stack,
+  };
+
+  if (stackIndex) {
+    meta.stackIndex = stackIndex;
+  }
+
+  return meta;
 }
 
 export function createCmosGate(

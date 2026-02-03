@@ -19,6 +19,7 @@ export interface ComponentDocument {
   pins: Record<string, string>;
   props?: Record<string, ValueExpr>;
   model?: string;
+  meta?: Record<string, string>;
 }
 
 export interface CircuitInit {
@@ -134,6 +135,7 @@ export class Circuit {
         pins: sortRecord(component.pins),
         ...(component.props ? { props: sortRecord(component.props) } : {}),
         ...(component.model ? { model: component.model } : {}),
+        ...(component.meta ? { meta: sortRecord(component.meta) } : {}),
       }));
 
     const document: CircuitDocument = {
@@ -166,6 +168,7 @@ function cloneComponent(component: ComponentDocument): ComponentDocument {
     pins: { ...component.pins },
     ...(component.props ? { props: { ...component.props } } : {}),
     ...(component.model ? { model: component.model } : {}),
+    ...(component.meta ? { meta: { ...component.meta } } : {}),
   };
 }
 

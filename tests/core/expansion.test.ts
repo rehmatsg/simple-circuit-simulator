@@ -100,13 +100,13 @@ test("expandCmosGates replaces CMOS gates with MOSFET stacks", () => {
     hasComponent(expanded.components, "mosfet_n", {
       d: "Y2",
       g: "A",
-      s: "NAND1_nmid",
+      s: "NAND1__int_nmid",
       b: "GND",
     }),
   );
   assert.ok(
     hasComponent(expanded.components, "mosfet_n", {
-      d: "NAND1_nmid",
+      d: "NAND1__int_nmid",
       g: "B",
       s: "GND",
       b: "GND",
@@ -117,13 +117,13 @@ test("expandCmosGates replaces CMOS gates with MOSFET stacks", () => {
     hasComponent(expanded.components, "mosfet_p", {
       d: "Y3",
       g: "A",
-      s: "NOR1_pmid",
+      s: "NOR1__int_pmid",
       b: "VDD",
     }),
   );
   assert.ok(
     hasComponent(expanded.components, "mosfet_p", {
-      d: "NOR1_pmid",
+      d: "NOR1__int_pmid",
       g: "B",
       s: "VDD",
       b: "VDD",
@@ -152,6 +152,14 @@ test("expandCmosGates replaces CMOS gates with MOSFET stacks", () => {
       b: "GND",
     }),
   );
+
+  const inverterPmos = expanded.components.find(
+    (component) => component.type === "mosfet_p" && component.pins.d === "Y",
+  );
+  assert.ok(inverterPmos?.meta);
+  assert.equal(inverterPmos?.meta?.gate, "INV1");
+  assert.equal(inverterPmos?.meta?.gateType, "cmos_not");
+  assert.equal(inverterPmos?.meta?.role, "pull_up");
 });
 
 test("expandCmosGates expands composite CMOS gates fully", () => {

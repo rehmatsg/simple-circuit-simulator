@@ -41,6 +41,7 @@ test("Circuit toJSON uses deterministic ordering", () => {
     type: "resistor",
     pins: { b: "N2", a: "N1" },
     props: { z: "3k", resistance: "1k" },
+    meta: { z: "last", a: "first" },
   });
   circuit.addComponent({
     name: "R1",
@@ -58,6 +59,10 @@ test("Circuit toJSON uses deterministic ordering", () => {
   assert.deepEqual(Object.keys(second.pins), ["a", "b"]);
   assert.deepEqual(Object.keys(second.props ?? {}), [
     "resistance",
+    "z",
+  ]);
+  assert.deepEqual(Object.keys(second.meta ?? {}), [
+    "a",
     "z",
   ]);
 });

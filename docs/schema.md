@@ -19,6 +19,7 @@ Component:
 - `pins: Record<string, string>` pin name to net name
 - `props?: Record<string, ValueExpr>` component properties
 - `model?: string` future model identifier
+- `meta?: Record<string, string>` optional metadata (visualization, annotations)
 
 ValueExpr:
 - number, e.g. `1000`

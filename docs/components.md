@@ -125,3 +125,5 @@ Notes:
 - Open switch is treated as no connection.
 - CMOS gate components (`cmos_*`) are expanded into MOSFET stacks via `expandCmosGates` before DC solving.
 - MOSFET threshold uses `Vgb`/`Vbg` when a body pin is provided; otherwise `Vgs`/`Vsg`.
+- Internal nets created by CMOS expansion use the `__int_` prefix (for visualization filtering).
+- Expanded MOSFETs include `meta` fields: `gate`, `gateType`, `role`, `stack`, optional `stackIndex`.
