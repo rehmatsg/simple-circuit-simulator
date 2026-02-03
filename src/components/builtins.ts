@@ -90,6 +90,31 @@ const BUILTIN_COMPONENTS: ComponentDefinition[] = [
     requiredPins: ["in1", "out"],
   },
   {
+    type: "cmos_and",
+    pins: ["in1", "in2", "out"],
+    requiredPins: ["in1", "in2", "out"],
+  },
+  {
+    type: "cmos_or",
+    pins: ["in1", "in2", "out"],
+    requiredPins: ["in1", "in2", "out"],
+  },
+  {
+    type: "cmos_xor",
+    pins: ["in1", "in2", "out"],
+    requiredPins: ["in1", "in2", "out"],
+  },
+  {
+    type: "cmos_half_adder",
+    pins: ["a", "b", "sum", "carry"],
+    requiredPins: ["a", "b", "sum", "carry"],
+  },
+  {
+    type: "cmos_full_adder",
+    pins: ["a", "b", "cin", "sum", "cout"],
+    requiredPins: ["a", "b", "cin", "sum", "cout"],
+  },
+  {
     type: "cmos_nand",
     pins: ["in1", "in2", "out"],
     requiredPins: ["in1", "in2", "out"],

@@ -153,3 +153,34 @@ test("expandCmosGates replaces CMOS gates with MOSFET stacks", () => {
     }),
   );
 });
+
+test("expandCmosGates expands composite CMOS gates fully", () => {
+  const doc: CircuitDocument = {
+    schemaVersion: 1,
+    sim: { mode: "dc" },
+    groundNet: "GND",
+    components: [
+      {
+        name: "X1",
+        type: "cmos_xor",
+        pins: { in1: "A", in2: "B", out: "Y" },
+      },
+      {
+        name: "HA1",
+        type: "cmos_half_adder",
+        pins: { a: "A", b: "B", sum: "SUM", carry: "CARRY" },
+      },
+    ],
+  };
+
+  const expanded = expandCmosGates(doc);
+  assert.ok(expanded.components.length > doc.components.length);
+  assert.equal(
+    expanded.components.some((component) => component.type.startsWith("cmos_")),
+    false,
+  );
+  assert.ok(
+    expanded.components.some((component) =>
+      component.type === "mosfet_n" || component.type === "mosfet_p"),
+  );
+});

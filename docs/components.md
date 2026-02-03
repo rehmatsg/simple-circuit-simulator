@@ -72,6 +72,26 @@ CMOS NOR (expands to MOSFET stack):
 - type: `cmos_nor`
 - pins: `in1`, `in2`, `out`
 
+CMOS AND (expands via NAND + NOT):
+- type: `cmos_and`
+- pins: `in1`, `in2`, `out`
+
+CMOS OR (expands via NOR + NOT):
+- type: `cmos_or`
+- pins: `in1`, `in2`, `out`
+
+CMOS XOR (expands via NAND network):
+- type: `cmos_xor`
+- pins: `in1`, `in2`, `out`
+
+CMOS Half Adder (sum + carry):
+- type: `cmos_half_adder`
+- pins: `a`, `b`, `sum`, `carry`
+
+CMOS Full Adder (sum + carry out):
+- type: `cmos_full_adder`
+- pins: `a`, `b`, `cin`, `sum`, `cout`
+
 Capacitor:
 - type: `capacitor`
 - pins: `a`, `b`
