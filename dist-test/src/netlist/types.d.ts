@@ -1,5 +1,5 @@
 export type NodeId = number;
-export type ElementType = "resistor" | "voltage_source" | "current_source" | "diode" | "capacitor" | "inductor";
+export type ElementType = "resistor" | "voltage_source" | "current_source" | "diode" | "capacitor" | "inductor" | "mosfet_n" | "mosfet_p";
 export interface TerminalRef {
     component: string;
     pin: string;

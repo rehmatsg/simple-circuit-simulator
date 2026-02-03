@@ -22,6 +22,8 @@ test("registerBuiltinComponents registers expected types", () => {
         "gate_or",
         "inductor",
         "led",
+        "mosfet_n",
+        "mosfet_p",
         "resistor",
         "switch",
     ]);

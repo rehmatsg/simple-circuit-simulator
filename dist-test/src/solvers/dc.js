@@ -19,7 +19,9 @@ export function solveDC(input, options = {}) {
         errors.push(errorDiagnostic(DiagnosticCodes.singularMatrix, "Netlist contains no nodes."));
         return buildErrorResult("dc", errors, netlistResult.warnings);
     }
-    const hasNonlinear = netlist.elements.some((element) => element.type === "diode");
+    const hasNonlinear = netlist.elements.some((element) => element.type === "diode" ||
+        element.type === "mosfet_n" ||
+        element.type === "mosfet_p");
     const nonlinearOptions = {};
     if (options.tolerance !== undefined) {
         nonlinearOptions.tolerance = options.tolerance;
@@ -167,6 +169,9 @@ function solveNonlinearMna(netlist, options) {
             }
             if (element.type === "diode") {
                 stampDiode(element, nodeIndex, matrix, rhs, solution);
+            }
+            if (element.type === "mosfet_n" || element.type === "mosfet_p") {
+                stampMosfet(element, nodeIndex, matrix, solution);
             }
         }
         voltageSources.forEach((source, sourceIndex) => {
@@ -322,6 +327,33 @@ function stampDiode(element, nodeIndex, matrix, rhs, solution) {
     stampConductance(nodeA, nodeB, conductance, nodeIndex, matrix);
     stampCurrentSourceRhs(nodeA, nodeB, iEq, nodeIndex, rhs);
 }
+function stampMosfet(element, nodeIndex, matrix, solution) {
+    const [drain, source] = element.nodes;
+    const gateNode = element.params.gate;
+    const vth = element.params.vth;
+    const ron = element.params.ron;
+    const roff = element.params.roff;
+    if (typeof gateNode !== "number" ||
+        typeof vth !== "number" ||
+        typeof ron !== "number" ||
+        typeof roff !== "number") {
+        return;
+    }
+    const vg = nodeVoltage(gateNode, nodeIndex, solution);
+    const vs = nodeVoltage(source, nodeIndex, solution);
+    const vgs = vg - vs;
+    let on = false;
+    if (element.type === "mosfet_n") {
+        on = vgs > vth;
+    }
+    else {
+        const vsg = vs - vg;
+        on = vsg > vth;
+    }
+    const resistance = on ? ron : roff;
+    const conductance = 1 / resistance;
+    stampConductance(drain, source, conductance, nodeIndex, matrix);
+}
 function stampConductance(nodeA, nodeB, conductance, nodeIndex, matrix) {
     const indexA = nodeIndex.get(nodeA) ?? -1;
     const indexB = nodeIndex.get(nodeB) ?? -1;
@@ -425,6 +457,14 @@ function computeElementResults(netlist, nodeVoltages, solution, voltageSourceOrd
             componentCurrents[element.component] = diodeCurrent;
             componentPower[element.component] = voltageDrop * diodeCurrent;
         }
+        if (element.type === "mosfet_n" || element.type === "mosfet_p") {
+            const mosfetCurrent = computeMosfetCurrent(element, voltageDrop, nodeVoltages, nodeNameById);
+            if (mosfetCurrent === null) {
+                continue;
+            }
+            componentCurrents[element.component] = mosfetCurrent;
+            componentPower[element.component] = voltageDrop * mosfetCurrent;
+        }
     }
     voltageSourceOrder.forEach((element, index) => {
         const currentIndex = nonGroundCount + index;
@@ -454,5 +494,36 @@ function computeDiodeCurrent(element, voltageDrop) {
     const denom = n * vt;
     const expArg = clamp(voltageDrop / denom, -40, 40);
     return isat * (Math.exp(expArg) - 1);
+}
+function computeMosfetCurrent(element, voltageDrop, nodeVoltages, nodeNameById) {
+    const gateNode = element.params.gate;
+    const vth = element.params.vth;
+    const ron = element.params.ron;
+    const roff = element.params.roff;
+    if (typeof gateNode !== "number" ||
+        typeof vth !== "number" ||
+        typeof ron !== "number" ||
+        typeof roff !== "number") {
+        return null;
+    }
+    const [drain, source] = element.nodes;
+    const gateName = nodeNameById.get(gateNode) ?? "";
+    const sourceName = nodeNameById.get(source) ?? "";
+    const vg = nodeVoltages[gateName] ?? 0;
+    const vs = nodeVoltages[sourceName] ?? 0;
+    const vgs = vg - vs;
+    let on = false;
+    if (element.type === "mosfet_n") {
+        on = vgs > vth;
+    }
+    else {
+        const vsg = vs - vg;
+        on = vsg > vth;
+    }
+    const resistance = on ? ron : roff;
+    if (!Number.isFinite(resistance) || resistance === 0) {
+        return null;
+    }
+    return voltageDrop / resistance;
 }
 //# sourceMappingURL=dc.js.map

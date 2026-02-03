@@ -153,6 +153,9 @@ function buildElementFromComponent(
       return buildCapacitor(component, definition, nodeByName, params, errors);
     case "inductor":
       return buildInductor(component, definition, nodeByName, params, errors);
+    case "mosfet_n":
+    case "mosfet_p":
+      return buildMosfet(component, definition, nodeByName, params, errors);
     case "battery":
       return buildVoltageSource(component, definition, nodeByName, params, errors);
     case "resistor":
@@ -234,6 +237,43 @@ function buildInductor(
     nodes: [a, b],
     pins: ["a", "b"],
     params: { inductance },
+  };
+}
+
+function buildMosfet(
+  component: { name: string; pins: Record<string, string>; props?: Record<string, unknown> },
+  definition: ComponentDefinition,
+  nodeByName: Record<string, number>,
+  params: Record<string, number | string | boolean> | undefined,
+  errors: Diagnostic[],
+): NetlistElement | null {
+  const d = resolveNode(component, "d", nodeByName, errors);
+  const g = resolveNode(component, "g", nodeByName, errors);
+  const s = resolveNode(component, "s", nodeByName, errors);
+  if (d === null || g === null || s === null) {
+    return null;
+  }
+
+  const bPin = component.pins.b;
+  const b = bPin ? nodeByName[bPin] : undefined;
+  const bodyNode = b ?? s;
+
+  const vth = resolveNumericProp(component, definition, "vth", params, errors);
+  const ron = resolveNumericProp(component, definition, "ron", params, errors);
+  const roff = resolveNumericProp(component, definition, "roff", params, errors);
+
+  if (vth === null || ron === null || roff === null) {
+    return null;
+  }
+
+  return {
+    id: component.name,
+    type: definition.type === "mosfet_p" ? "mosfet_p" : "mosfet_n",
+    component: component.name,
+    originalType: definition.type,
+    nodes: [d, s],
+    pins: ["d", "s"],
+    params: { gate: g, body: bodyNode, vth, ron, roff },
   };
 }
 

@@ -84,6 +84,66 @@ const BUILTIN_COMPONENTS = [
         requiredPins: ["in1", "out"],
     },
     {
+        type: "mosfet_n",
+        pins: ["d", "g", "s", "b"],
+        requiredPins: ["d", "g", "s"],
+        props: {
+            vth: {
+                kind: "number",
+                unit: "v",
+                required: false,
+                allowUnitless: true,
+            },
+            ron: {
+                kind: "number",
+                unit: "ohm",
+                required: false,
+                allowUnitless: true,
+            },
+            roff: {
+                kind: "number",
+                unit: "ohm",
+                required: false,
+                allowUnitless: true,
+            },
+        },
+        defaultProps: {
+            vth: 1,
+            ron: 10,
+            roff: 1e9,
+        },
+    },
+    {
+        type: "mosfet_p",
+        pins: ["d", "g", "s", "b"],
+        requiredPins: ["d", "g", "s"],
+        props: {
+            vth: {
+                kind: "number",
+                unit: "v",
+                required: false,
+                allowUnitless: true,
+            },
+            ron: {
+                kind: "number",
+                unit: "ohm",
+                required: false,
+                allowUnitless: true,
+            },
+            roff: {
+                kind: "number",
+                unit: "ohm",
+                required: false,
+                allowUnitless: true,
+            },
+        },
+        defaultProps: {
+            vth: 1,
+            ron: 10,
+            roff: 1e9,
+        },
+    },
+    {
         type: "capacitor",
         pins: ["a", "b"],
         props: {

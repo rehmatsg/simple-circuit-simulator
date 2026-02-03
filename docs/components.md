@@ -72,6 +72,22 @@ Inductor:
 - props:
   - `inductance` number, unit henries (unitless allowed)
 
+MOSFET (NMOS):
+- type: `mosfet_n`
+- pins: `d`, `g`, `s`, optional `b`
+- props (optional, defaults provided):
+  - `vth` threshold voltage (volts)
+  - `ron` on resistance (ohms)
+  - `roff` off resistance (ohms)
+
+MOSFET (PMOS):
+- type: `mosfet_p`
+- pins: `d`, `g`, `s`, optional `b`
+- props (optional, defaults provided):
+  - `vth` threshold voltage (volts)
+  - `ron` on resistance (ohms)
+  - `roff` off resistance (ohms)
+
 Notes:
 - Closed switch is modeled as a resistor with configurable `Ron` (default 1e-3).
 - Open switch is treated as no connection.
