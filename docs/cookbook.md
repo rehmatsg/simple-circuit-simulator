@@ -55,7 +55,114 @@
 }
 ```
 
-## Simple AND Gate
+## Diode Clamp
+```json
+{
+  "schemaVersion": 1,
+  "sim": { "mode": "dc" },
+  "groundNet": "GND",
+  "components": [
+    { "name": "B1", "type": "battery", "pins": { "pos": "VDD", "neg": "GND" }, "props": { "voltage": "5V" } },
+    { "name": "R1", "type": "resistor", "pins": { "a": "VDD", "b": "N1" }, "props": { "resistance": "1k" } },
+    { "name": "D1", "type": "diode", "pins": { "anode": "N1", "cathode": "GND" } }
+  ]
+}
+```
+
+## LED Indicator
+```json
+{
+  "schemaVersion": 1,
+  "sim": { "mode": "dc" },
+  "groundNet": "GND",
+  "components": [
+    { "name": "B1", "type": "battery", "pins": { "pos": "VDD", "neg": "GND" }, "props": { "voltage": "9V" } },
+    { "name": "R1", "type": "resistor", "pins": { "a": "VDD", "b": "N1" }, "props": { "resistance": "330" } },
+    { "name": "LED1", "type": "led", "pins": { "anode": "N1", "cathode": "GND" } }
+  ]
+}
+```
+
+## MOSFET Low-Side Switch
+```json
+{
+  "schemaVersion": 1,
+  "sim": { "mode": "dc" },
+  "groundNet": "GND",
+  "components": [
+    { "name": "B1", "type": "battery", "pins": { "pos": "VDD", "neg": "GND" }, "props": { "voltage": "5V" } },
+    { "name": "R1", "type": "resistor", "pins": { "a": "VDD", "b": "N1" }, "props": { "resistance": "1k" } },
+    { "name": "M1", "type": "mosfet_n", "pins": { "d": "N1", "g": "VIN", "s": "GND" }, "props": { "vth": "1V" } }
+  ]
+}
+```
+
+## CMOS Inverter (Transistor Stack)
+```json
+{
+  "schemaVersion": 1,
+  "sim": { "mode": "dc" },
+  "groundNet": "GND",
+  "components": [
+    { "name": "B1", "type": "battery", "pins": { "pos": "VDD", "neg": "GND" }, "props": { "voltage": "5V" } },
+    { "name": "INV1", "type": "cmos_not", "pins": { "in1": "A", "out": "Y" } }
+  ]
+}
+```
+
+## CMOS NAND Gate (Transistor Stack)
+```json
+{
+  "schemaVersion": 1,
+  "sim": { "mode": "dc" },
+  "groundNet": "GND",
+  "components": [
+    { "name": "B1", "type": "battery", "pins": { "pos": "VDD", "neg": "GND" }, "props": { "voltage": "5V" } },
+    { "name": "NAND1", "type": "cmos_nand", "pins": { "in1": "A", "in2": "B", "out": "Y" } }
+  ]
+}
+```
+
+## CMOS XOR Gate
+```json
+{
+  "schemaVersion": 1,
+  "sim": { "mode": "dc" },
+  "groundNet": "GND",
+  "components": [
+    { "name": "B1", "type": "battery", "pins": { "pos": "VDD", "neg": "GND" }, "props": { "voltage": "5V" } },
+    { "name": "XOR1", "type": "cmos_xor", "pins": { "in1": "A", "in2": "B", "out": "Y" } }
+  ]
+}
+```
+
+## Half Adder (CMOS)
+```json
+{
+  "schemaVersion": 1,
+  "sim": { "mode": "dc" },
+  "groundNet": "GND",
+  "components": [
+    { "name": "B1", "type": "battery", "pins": { "pos": "VDD", "neg": "GND" }, "props": { "voltage": "5V" } },
+    { "name": "HA1", "type": "cmos_half_adder", "pins": { "a": "A", "b": "B", "sum": "SUM", "carry": "CARRY" } }
+  ]
+}
+```
+
+## Full Adder (CMOS)
+```json
+{
+  "schemaVersion": 1,
+  "sim": { "mode": "dc" },
+  "groundNet": "GND",
+  "components": [
+    { "name": "B1", "type": "battery", "pins": { "pos": "VDD", "neg": "GND" }, "props": { "voltage": "5V" } },
+    { "name": "FA1", "type": "cmos_full_adder", "pins": { "a": "A", "b": "B", "cin": "CIN", "sum": "SUM", "cout": "COUT" } }
+  ]
+}
+```
+
+## Simple AND Gate (Digital Mode)
 ```json
 {
   "schemaVersion": 1,

@@ -9,4 +9,5 @@ Files:
 - `solver.md` DC solver behavior and limitations
 - `errors.md` Error and warning code catalog
 - `cookbook.md` Example circuits
+- `llm.md` Zod schema and prompt templates for LLM circuit authoring
 - `performance.md` Performance notes and benchmarks

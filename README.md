@@ -1,17 +1,31 @@
 # Simple Circuit Simulator
 
-UI-agnostic TypeScript library for simulating electrical circuits using real circuit laws. v1 focuses on deterministic DC analysis for small circuits.
+UI-agnostic TypeScript library for simulating electrical circuits using real circuit laws. The focus is deterministic DC analysis, a stable JSON data model, and extensibility for future transient and nonlinear support.
 
-## Features (v1)
+## Features
 - JSON circuit import/export with schema versioning
 - Circuit validation with structured diagnostics
 - Component registry with canonical pin naming
 - DC solver using Modified Nodal Analysis (MNA)
+- Nonlinear elements (diode/LED) and MOSFET switch-level modeling
+- CMOS gate stacks with expansion (NOT/NAND/NOR) and composite logic (AND/OR/XOR/adders)
 - Deterministic results with golden tests
+- LLM-friendly Zod schema and prompt templates
 
-## Usage
+## Installation
+This repo is intended for local development and embedding:
+```
+npm install
+```
+
+## Quick Start
 ```ts
-import { createDefaultRegistry, importCircuit, solveDC } from "./index.js";
+import {
+  createDefaultRegistry,
+  importCircuit,
+  solveDC,
+  expandCmosGates,
+} from "./index.js";
 
 const registry = createDefaultRegistry();
 
@@ -20,12 +34,13 @@ const doc = {
   sim: { mode: "dc" },
   groundNet: "GND",
   components: [
-    { name: "B1", type: "battery", pins: { pos: "VCC", neg: "GND" }, props: { voltage: "9V" } },
-    { name: "R1", type: "resistor", pins: { a: "VCC", b: "GND" }, props: { resistance: "1k" } }
-  ]
+    { name: "B1", type: "battery", pins: { pos: "VDD", neg: "GND" }, props: { voltage: "5V" } },
+    { name: "INV1", type: "cmos_not", pins: { in1: "A", out: "Y" } },
+  ],
 };
 
-const imported = importCircuit(doc, { registry });
+const expanded = expandCmosGates(doc);
+const imported = importCircuit(expanded, { registry });
 if (!imported.ok) {
   console.error(imported.errors);
 } else {
@@ -34,5 +49,21 @@ if (!imported.ok) {
 }
 ```
 
+## LLM Authoring Support
+We provide a Zod schema and prompt templates to help LLMs emit valid circuit JSON:
+- `CircuitDocumentSchema` in `src/llm/schema.ts`
+- Prompts in `src/llm/prompts.ts`
+- Guide in `docs/llm.md`
+
+## CMOS Logic Notes
+- Use `cmos_*` components for transistor-level logic in `dc` mode.
+- Run `expandCmosGates` to convert CMOS gates into MOSFET stacks before DC solving.
+- Internal expansion nets use the `__int_` prefix for easy filtering in UI layers.
+
 ## Documentation
 See `docs/README.md` for the full v1 documentation set.
+
+## Development
+- `npm run lint` — TypeScript type check
+- `npm run build` — compile to `dist/`
+- `npm test` — run unit + golden tests
