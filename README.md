@@ -19,6 +19,11 @@ This repo is intended for local development and embedding:
 npm install
 ```
 
+Install directly from GitHub:
+```
+npm install git+https://github.com/rehmatsg/simple-circuit-simulator.git
+```
+
 ## Quick Start
 ```ts
 import {
