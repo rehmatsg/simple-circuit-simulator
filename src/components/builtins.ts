@@ -14,6 +14,62 @@ const BUILTIN_COMPONENTS: ComponentDefinition[] = [
     },
   },
   {
+    type: "diode",
+    pins: ["anode", "cathode"],
+    props: {
+      is: {
+        kind: "number",
+        unit: "a",
+        required: false,
+        allowUnitless: true,
+      },
+      n: {
+        kind: "number",
+        required: false,
+        allowUnitless: true,
+      },
+      vt: {
+        kind: "number",
+        unit: "v",
+        required: false,
+        allowUnitless: true,
+      },
+    },
+    defaultProps: {
+      is: 1e-12,
+      n: 1,
+      vt: 0.02585,
+    },
+  },
+  {
+    type: "led",
+    pins: ["anode", "cathode"],
+    props: {
+      is: {
+        kind: "number",
+        unit: "a",
+        required: false,
+        allowUnitless: true,
+      },
+      n: {
+        kind: "number",
+        required: false,
+        allowUnitless: true,
+      },
+      vt: {
+        kind: "number",
+        unit: "v",
+        required: false,
+        allowUnitless: true,
+      },
+    },
+    defaultProps: {
+      is: 1e-18,
+      n: 2,
+      vt: 0.02585,
+    },
+  },
+  {
     type: "battery",
     pins: ["pos", "neg"],
     props: {

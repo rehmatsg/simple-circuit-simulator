@@ -146,6 +146,9 @@ function buildElementFromComponent(
   switch (definition.type) {
     case "current_source":
       return buildCurrentSource(component, definition, nodeByName, params, errors);
+    case "diode":
+    case "led":
+      return buildDiode(component, definition, nodeByName, params, errors);
     case "battery":
       return buildVoltageSource(component, definition, nodeByName, params, errors);
     case "resistor":
@@ -205,6 +208,45 @@ function buildCurrentSource(
     nodes: [pos, neg],
     pins: ["pos", "neg"],
     params: { current },
+  };
+}
+
+function buildDiode(
+  component: { name: string; pins: Record<string, string>; props?: Record<string, unknown> },
+  definition: ComponentDefinition,
+  nodeByName: Record<string, number>,
+  params: Record<string, number | string | boolean> | undefined,
+  errors: Diagnostic[],
+): NetlistElement | null {
+  const anode = resolveNode(component, "anode", nodeByName, errors);
+  const cathode = resolveNode(component, "cathode", nodeByName, errors);
+  const isat = resolveNumericProp(component, definition, "is", params, errors);
+  const n = resolveNumericProp(component, definition, "n", params, errors);
+  const vt = resolveNumericProp(component, definition, "vt", params, errors);
+
+  if (anode === null || cathode === null || isat === null || n === null || vt === null) {
+    return null;
+  }
+
+  if (isat <= 0 || n <= 0 || vt <= 0) {
+    errors.push(
+      errorDiagnostic(
+        DiagnosticCodes.invalidPropertyValue,
+        `Invalid diode parameters for component \"${component.name}\".`,
+        { component: component.name, details: { is: isat, n, vt } },
+      ),
+    );
+    return null;
+  }
+
+  return {
+    id: component.name,
+    type: "diode",
+    component: component.name,
+    originalType: definition.type,
+    nodes: [anode, cathode],
+    pins: ["anode", "cathode"],
+    params: { is: isat, n, vt },
   };
 }
 

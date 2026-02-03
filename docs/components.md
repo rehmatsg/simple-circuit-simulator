@@ -32,6 +32,22 @@ Switch:
 - props:
   - `state` enum: `open` or `closed`
 
+Diode:
+- type: `diode`
+- pins: `anode`, `cathode`
+- props (optional, defaults provided):
+  - `is` saturation current (amps)
+  - `n` emission coefficient (unitless)
+  - `vt` thermal voltage (volts)
+
+LED:
+- type: `led`
+- pins: `anode`, `cathode`
+- props (optional, defaults provided):
+  - `is` saturation current (amps)
+  - `n` emission coefficient (unitless)
+  - `vt` thermal voltage (volts)
+
 Notes:
 - Closed switch is modeled as a resistor with configurable `Ron` (default 1e-3).
 - Open switch is treated as no connection.

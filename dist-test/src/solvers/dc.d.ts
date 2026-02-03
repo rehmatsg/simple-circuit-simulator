@@ -5,6 +5,9 @@ import type { SimulationResult } from "./types.js";
 export interface SolveDCOptions {
     registry?: ComponentRegistry;
     tolerance?: number;
+    nonlinearTolerance?: number;
+    maxIterations?: number;
+    nonlinearDamping?: number;
     shortCircuitThreshold?: number;
     switchClosedResistance?: number;
 }

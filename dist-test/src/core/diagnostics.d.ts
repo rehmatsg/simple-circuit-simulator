@@ -17,6 +17,7 @@ export declare const DiagnosticCodes: {
     readonly missingPins: "missing_pins";
     readonly missingProperty: "missing_property";
     readonly missingRegistry: "missing_registry";
+    readonly nonlinearConvergenceFailure: "nonlinear_convergence_failure";
     readonly unknownComponentType: "unknown_component_type";
     readonly invalidValue: "invalid_value";
     readonly invalidNumeric: "invalid_numeric_literal";

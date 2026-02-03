@@ -9,6 +9,7 @@ Supported elements:
 - Voltage source between `pos` and `neg`
 - Current source between `pos` and `neg`
 - Switch modeled as open or low-resistance (Ron)
+- Diode/LED nonlinear elements between `anode` and `cathode`
 
 Reference node:
 - `groundNet` is mapped to node voltage 0.
@@ -24,5 +25,6 @@ Warnings:
 - `short_circuit_suspected` is emitted when component current exceeds a threshold.
 
 Limitations:
-- Linear DC only (no capacitors, inductors, or nonlinear devices in v1).
+- DC only in v1/v2 (no capacitors or inductors yet).
+- Nonlinear devices use Newton-Raphson with configurable iteration limits.
 - Dense solver is used; no sparse optimization yet.

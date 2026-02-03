@@ -16,6 +16,7 @@ export const DiagnosticCodes = {
     missingPins: "missing_pins",
     missingProperty: "missing_property",
     missingRegistry: "missing_registry",
+    nonlinearConvergenceFailure: "nonlinear_convergence_failure",
     unknownComponentType: "unknown_component_type",
     invalidValue: "invalid_value",
     invalidNumeric: "invalid_numeric_literal",

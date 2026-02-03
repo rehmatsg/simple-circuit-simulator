@@ -93,6 +93,23 @@ test("buildNetlist includes current source elements", () => {
     assert.equal(currentElement?.type, "current_source");
     assert.equal(currentElement?.params.current, 0.01);
 });
+test("buildNetlist includes diode elements with defaults", () => {
+    const circuit = baseCircuit();
+    circuit.addComponent({
+        name: "D1",
+        type: "diode",
+        pins: { anode: "N1", cathode: "GND" },
+    });
+    const result = buildNetlist(circuit, { registry });
+    assert.equal(result.ok, true);
+    if (!result.ok) {
+        return;
+    }
+    const diodeElement = result.netlist.elements.find((element) => element.component === "D1");
+    assert.ok(diodeElement);
+    assert.equal(diodeElement?.type, "diode");
+    assert.equal(typeof diodeElement?.params.is, "number");
+});
 test("buildNetlist errors on floating reference", () => {
     const circuit = Circuit.create({
         schemaVersion: 1,

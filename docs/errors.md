@@ -15,6 +15,7 @@ Errors:
 - `missing_pins`
 - `missing_property`
 - `missing_registry`
+- `nonlinear_convergence_failure`
 - `unknown_component_type`
 - `invalid_value`
 - `invalid_numeric_literal`

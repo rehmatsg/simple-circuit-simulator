@@ -10,11 +10,16 @@ import type { DebugInfo, SimulationResult } from "./types.js";
 export interface SolveDCOptions {
   registry?: ComponentRegistry;
   tolerance?: number;
+  nonlinearTolerance?: number;
+  maxIterations?: number;
+  nonlinearDamping?: number;
   shortCircuitThreshold?: number;
   switchClosedResistance?: number;
 }
 
 const DEFAULT_SHORT_CIRCUIT_THRESHOLD = 10;
+const DEFAULT_NONLINEAR_TOLERANCE = 1e-6;
+const DEFAULT_MAX_ITERATIONS = 50;
 
 export function solveDC(
   input: Circuit | Netlist,
@@ -42,25 +47,36 @@ export function solveDC(
     return buildErrorResult("dc", errors, netlistResult.warnings);
   }
 
-  const stampResult = stampMna(netlist);
+  const hasNonlinear = netlist.elements.some((element) => element.type === "diode");
+
+  const nonlinearOptions: NonlinearSolveOptions = {};
+  if (options.tolerance !== undefined) {
+    nonlinearOptions.tolerance = options.tolerance;
+  }
+  if (options.nonlinearTolerance !== undefined) {
+    nonlinearOptions.nonlinearTolerance = options.nonlinearTolerance;
+  }
+  if (options.maxIterations !== undefined) {
+    nonlinearOptions.maxIterations = options.maxIterations;
+  }
+  if (options.nonlinearDamping !== undefined) {
+    nonlinearOptions.nonlinearDamping = options.nonlinearDamping;
+  }
+
+  const stampResult = hasNonlinear
+    ? solveNonlinearMna(netlist, nonlinearOptions)
+    : solveLinearMna(netlist, options.tolerance);
+
   if (!stampResult.ok) {
     return buildErrorResult("dc", stampResult.errors, netlistResult.warnings);
   }
 
-  const { matrix, rhs, voltageSourceOrder, nonGroundCount } = stampResult;
-  const linearOptions = options.tolerance !== undefined ? { tolerance: options.tolerance } : undefined;
-  const solution = solveLinearSystem(matrix, rhs, linearOptions);
-
-  if (!solution.ok) {
-    errors.push(solution.error);
-    return buildErrorResult("dc", errors, netlistResult.warnings);
-  }
-
-  const nodeVoltages = buildNodeVoltages(netlist, solution.solution);
+  const { solution, voltageSourceOrder, nonGroundCount } = stampResult;
+  const nodeVoltages = buildNodeVoltages(netlist, solution);
   const { componentCurrents, componentPower } = computeElementResults(
     netlist,
     nodeVoltages,
-    solution.solution,
+    solution,
     voltageSourceOrder,
     nonGroundCount,
   );
@@ -81,7 +97,7 @@ export function solveDC(
   const debug: DebugInfo = {
     nodeCount: netlist.nodes.length,
     voltageSourceCount: voltageSourceOrder.length,
-    matrixSize: matrix.length,
+    matrixSize: nonGroundCount + voltageSourceOrder.length,
   };
 
   return {
@@ -139,8 +155,8 @@ function buildErrorResult(
   };
 }
 
-function stampMna(netlist: Netlist):
-  | { ok: true; matrix: number[][]; rhs: number[]; voltageSourceOrder: NetlistElement[]; nonGroundCount: number }
+function solveLinearMna(netlist: Netlist, tolerance?: number):
+  | { ok: true; solution: number[]; voltageSourceOrder: NetlistElement[]; nonGroundCount: number }
   | { ok: false; errors: Diagnostic[] } {
   const groundNodeId = netlist.groundNodeId;
   const nodeIndex = new Map<number, number>();
@@ -188,7 +204,125 @@ function stampMna(netlist: Netlist):
     return { ok: false, errors };
   }
 
-  return { ok: true, matrix, rhs, voltageSourceOrder: voltageSources, nonGroundCount };
+  const linearOptions = tolerance !== undefined ? { tolerance } : undefined;
+  const solution = solveLinearSystem(matrix, rhs, linearOptions);
+  if (!solution.ok) {
+    return { ok: false, errors: [solution.error] };
+  }
+
+  return { ok: true, solution: solution.solution, voltageSourceOrder: voltageSources, nonGroundCount };
+}
+
+interface NonlinearSolveOptions {
+  tolerance?: number;
+  nonlinearTolerance?: number;
+  maxIterations?: number;
+  nonlinearDamping?: number;
+}
+
+function solveNonlinearMna(
+  netlist: Netlist,
+  options: NonlinearSolveOptions,
+):
+  | { ok: true; solution: number[]; voltageSourceOrder: NetlistElement[]; nonGroundCount: number }
+  | { ok: false; errors: Diagnostic[] } {
+  const groundNodeId = netlist.groundNodeId;
+  const nodeIndex = new Map<number, number>();
+  const errors: Diagnostic[] = [];
+  let index = 0;
+
+  for (const node of netlist.nodes) {
+    if (node.id === groundNodeId) {
+      nodeIndex.set(node.id, -1);
+      continue;
+    }
+    nodeIndex.set(node.id, index);
+    index += 1;
+  }
+
+  const voltageSources = netlist.elements.filter((element) => element.type === "voltage_source");
+  const nonGroundCount = index;
+  const totalUnknowns = nonGroundCount + voltageSources.length;
+  const nonlinearTolerance = options.nonlinearTolerance ?? DEFAULT_NONLINEAR_TOLERANCE;
+  const maxIterations = options.maxIterations ?? DEFAULT_MAX_ITERATIONS;
+  const dampingRaw = options.nonlinearDamping ?? 0.5;
+  const damping = clamp(dampingRaw, 0.05, 1);
+
+  let solution = Array.from({ length: totalUnknowns }, () => 0);
+
+  for (let iteration = 0; iteration < maxIterations; iteration += 1) {
+    const matrix = Array.from({ length: totalUnknowns }, () =>
+      Array.from({ length: totalUnknowns }, () => 0),
+    );
+    const rhs = Array.from({ length: totalUnknowns }, () => 0);
+
+    for (const element of netlist.elements) {
+      if (element.type === "resistor") {
+        stampResistor(element, nodeIndex, matrix, errors);
+      }
+      if (element.type === "current_source") {
+        stampCurrentSource(element, nodeIndex, rhs);
+      }
+      if (element.type === "diode") {
+        stampDiode(element, nodeIndex, matrix, rhs, solution);
+      }
+    }
+
+    voltageSources.forEach((source, sourceIndex) => {
+      stampVoltageSource(source, sourceIndex, nodeIndex, matrix, rhs, nonGroundCount);
+    });
+
+    if (errors.length > 0) {
+      return { ok: false, errors };
+    }
+
+    const linearOptions = options.tolerance !== undefined ? { tolerance: options.tolerance } : undefined;
+    const linearSolution = solveLinearSystem(matrix, rhs, linearOptions);
+    if (!linearSolution.ok) {
+      return { ok: false, errors: [linearSolution.error] };
+    }
+
+    const nextSolution = linearSolution.solution;
+    let maxDeltaRaw = 0;
+    for (let i = 0; i < nextSolution.length; i += 1) {
+      const current = solution[i] ?? 0;
+      const target = nextSolution[i] ?? 0;
+      const delta = Math.abs(target - current);
+      if (delta > maxDeltaRaw) {
+        maxDeltaRaw = delta;
+      }
+    }
+
+    const adaptiveDamping = Math.min(damping, 1 / Math.max(1, maxDeltaRaw));
+
+    let maxDelta = 0;
+    for (let i = 0; i < nextSolution.length; i += 1) {
+      const current = solution[i] ?? 0;
+      const target = nextSolution[i] ?? 0;
+      const damped = current + adaptiveDamping * (target - current);
+      nextSolution[i] = damped;
+      const delta = Math.abs(damped - current);
+      if (delta > maxDelta) {
+        maxDelta = delta;
+      }
+    }
+
+    solution = nextSolution;
+
+    if (maxDelta <= nonlinearTolerance) {
+      return { ok: true, solution, voltageSourceOrder: voltageSources, nonGroundCount };
+    }
+  }
+
+  return {
+    ok: false,
+    errors: [
+      errorDiagnostic(
+        DiagnosticCodes.nonlinearConvergenceFailure,
+        `Nonlinear solver did not converge within ${maxIterations} iterations.`,
+      ),
+    ],
+  };
 }
 
 function stampResistor(
@@ -304,6 +438,117 @@ function stampCurrentSource(
   }
 }
 
+function stampDiode(
+  element: NetlistElement,
+  nodeIndex: Map<number, number>,
+  matrix: number[][],
+  rhs: number[],
+  solution: number[],
+): void {
+  const [nodeA, nodeB] = element.nodes;
+  const isat = element.params.is;
+  const n = element.params.n;
+  const vt = element.params.vt;
+
+  if (
+    typeof isat !== "number" ||
+    typeof n !== "number" ||
+    typeof vt !== "number" ||
+    isat <= 0 ||
+    n <= 0 ||
+    vt <= 0
+  ) {
+    return;
+  }
+
+  const voltageA = nodeVoltage(nodeA, nodeIndex, solution);
+  const voltageB = nodeVoltage(nodeB, nodeIndex, solution);
+  const vd = voltageA - voltageB;
+  const denom = n * vt;
+  const expArg = clamp(vd / denom, -40, 40);
+  const expVal = Math.exp(expArg);
+  const current = isat * (expVal - 1);
+  const conductance = (isat / denom) * expVal;
+  const iEq = current - conductance * vd;
+
+  stampConductance(nodeA, nodeB, conductance, nodeIndex, matrix);
+  stampCurrentSourceRhs(nodeA, nodeB, iEq, nodeIndex, rhs);
+}
+
+function stampConductance(
+  nodeA: number,
+  nodeB: number,
+  conductance: number,
+  nodeIndex: Map<number, number>,
+  matrix: number[][],
+): void {
+  const indexA = nodeIndex.get(nodeA) ?? -1;
+  const indexB = nodeIndex.get(nodeB) ?? -1;
+
+  if (indexA >= 0) {
+    const rowA = matrix[indexA];
+    if (rowA) {
+      rowA[indexA] = (rowA[indexA] ?? 0) + conductance;
+    }
+  }
+  if (indexB >= 0) {
+    const rowB = matrix[indexB];
+    if (rowB) {
+      rowB[indexB] = (rowB[indexB] ?? 0) + conductance;
+    }
+  }
+  if (indexA >= 0 && indexB >= 0) {
+    const rowA = matrix[indexA];
+    const rowB = matrix[indexB];
+    if (rowA) {
+      rowA[indexB] = (rowA[indexB] ?? 0) - conductance;
+    }
+    if (rowB) {
+      rowB[indexA] = (rowB[indexA] ?? 0) - conductance;
+    }
+  }
+}
+
+function stampCurrentSourceRhs(
+  nodeA: number,
+  nodeB: number,
+  current: number,
+  nodeIndex: Map<number, number>,
+  rhs: number[],
+): void {
+  const indexA = nodeIndex.get(nodeA) ?? -1;
+  const indexB = nodeIndex.get(nodeB) ?? -1;
+
+  if (indexA >= 0) {
+    rhs[indexA] = (rhs[indexA] ?? 0) - current;
+  }
+  if (indexB >= 0) {
+    rhs[indexB] = (rhs[indexB] ?? 0) + current;
+  }
+}
+
+function nodeVoltage(
+  nodeId: number,
+  nodeIndex: Map<number, number>,
+  solution: number[],
+): number {
+  const index = nodeIndex.get(nodeId) ?? -1;
+  if (index < 0) {
+    return 0;
+  }
+  return solution[index] ?? 0;
+}
+
+function clamp(value: number, min: number, max: number): number {
+  if (value < min) {
+    return min;
+  }
+  if (value > max) {
+    return max;
+  }
+  return value;
+}
+
 function buildNodeVoltages(netlist: Netlist, solution: number[]): Record<string, number> {
   const voltages: Record<string, number> = {};
   const groundNodeId = netlist.groundNodeId;
@@ -362,6 +607,15 @@ function computeElementResults(
       componentCurrents[element.component] = current;
       componentPower[element.component] = voltageDrop * current;
     }
+
+    if (element.type === "diode") {
+      const diodeCurrent = computeDiodeCurrent(element, voltageDrop);
+      if (diodeCurrent === null) {
+        continue;
+      }
+      componentCurrents[element.component] = diodeCurrent;
+      componentPower[element.component] = voltageDrop * diodeCurrent;
+    }
   }
 
   voltageSourceOrder.forEach((element, index) => {
@@ -377,4 +631,23 @@ function computeElementResults(
   });
 
   return { componentCurrents, componentPower };
+}
+
+function computeDiodeCurrent(element: NetlistElement, voltageDrop: number): number | null {
+  const isat = element.params.is;
+  const n = element.params.n;
+  const vt = element.params.vt;
+  if (
+    typeof isat !== "number" ||
+    typeof n !== "number" ||
+    typeof vt !== "number" ||
+    isat <= 0 ||
+    n <= 0 ||
+    vt <= 0
+  ) {
+    return null;
+  }
+  const denom = n * vt;
+  const expArg = clamp(voltageDrop / denom, -40, 40);
+  return isat * (Math.exp(expArg) - 1);
 }
