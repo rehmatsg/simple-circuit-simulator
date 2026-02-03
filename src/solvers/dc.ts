@@ -1,6 +1,7 @@
 import type { Circuit } from "../core/circuit.js";
 import type { Diagnostic } from "../core/types.js";
 import { asMessage, DiagnosticCodes, errorDiagnostic, warningDiagnostic } from "../core/diagnostics.js";
+import { sortDiagnostics } from "../core/determinism.js";
 import type { ComponentRegistry } from "../components/registry.js";
 import { buildNetlist } from "../netlist/builder.js";
 import type { Netlist, NetlistElement } from "../netlist/types.js";
@@ -107,7 +108,9 @@ export function solveDC(
     componentCurrents,
     componentPower,
     errors: [],
-    warnings: warnings.map(asMessage).concat(netlistResult.warnings.map(asMessage)),
+    warnings: sortDiagnostics(
+      warnings.map(asMessage).concat(netlistResult.warnings.map(asMessage)),
+    ),
     debug,
   };
 }
@@ -150,8 +153,8 @@ function buildErrorResult(
     nodeVoltages: {},
     componentCurrents: {},
     componentPower: {},
-    errors: errors.map(asMessage),
-    warnings: warnings.map(asMessage),
+    errors: sortDiagnostics(errors.map(asMessage)),
+    warnings: sortDiagnostics(warnings.map(asMessage)),
   };
 }
 

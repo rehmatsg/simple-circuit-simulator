@@ -31,4 +31,5 @@ Warnings:
 
 Notes:
 - Errors and warnings are returned as structured diagnostics with optional `component` and `net` fields.
+- Diagnostics are sorted deterministically by code, component, net, and message.
 - `details` may include additional context such as thresholds or valid pin names.

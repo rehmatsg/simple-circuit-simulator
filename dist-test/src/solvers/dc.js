@@ -1,4 +1,5 @@
 import { asMessage, DiagnosticCodes, errorDiagnostic, warningDiagnostic } from "../core/diagnostics.js";
+import { sortDiagnostics } from "../core/determinism.js";
 import { buildNetlist } from "../netlist/builder.js";
 import { solveLinearSystem } from "./linear.js";
 const DEFAULT_SHORT_CIRCUIT_THRESHOLD = 10;
@@ -59,7 +60,7 @@ export function solveDC(input, options = {}) {
         componentCurrents,
         componentPower,
         errors: [],
-        warnings: warnings.map(asMessage).concat(netlistResult.warnings.map(asMessage)),
+        warnings: sortDiagnostics(warnings.map(asMessage).concat(netlistResult.warnings.map(asMessage))),
         debug,
     };
 }
@@ -85,8 +86,8 @@ function buildErrorResult(mode, errors, warnings = []) {
         nodeVoltages: {},
         componentCurrents: {},
         componentPower: {},
-        errors: errors.map(asMessage),
-        warnings: warnings.map(asMessage),
+        errors: sortDiagnostics(errors.map(asMessage)),
+        warnings: sortDiagnostics(warnings.map(asMessage)),
     };
 }
 function solveLinearMna(netlist, tolerance) {

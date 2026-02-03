@@ -1,6 +1,7 @@
 import type { Circuit } from "../core/circuit.js";
 import type { Diagnostic } from "../core/types.js";
 import { asMessage, DiagnosticCodes, errorDiagnostic } from "../core/diagnostics.js";
+import { sortDiagnostics } from "../core/determinism.js";
 import type { SimulationResult } from "./types.js";
 
 export interface SolveDigitalOptions {
@@ -126,8 +127,8 @@ export function solveDigital(
       nodeVoltages: {},
       componentCurrents: {},
       componentPower: {},
-      errors: errors.map(asMessage),
-      warnings: warnings.map(asMessage),
+      errors: sortDiagnostics(errors.map(asMessage)),
+      warnings: sortDiagnostics(warnings.map(asMessage)),
     };
   }
 
