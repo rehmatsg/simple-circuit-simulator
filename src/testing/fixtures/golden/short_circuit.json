@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "sim": { "mode": "dc" },
+  "groundNet": "GND",
+  "components": [
+    {
+      "name": "B1",
+      "type": "battery",
+      "pins": { "pos": "VCC", "neg": "GND" },
+      "props": { "voltage": "5V" }
+    },
+    {
+      "name": "R1",
+      "type": "resistor",
+      "pins": { "a": "VCC", "b": "GND" },
+      "props": { "resistance": "0.01" }
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "sim": { "mode": "dc" },
+  "groundNet": "GND",
+  "components": [
+    {
+      "name": "R1",
+      "type": "resistor",
+      "pins": { "a": "N1", "b": "N2" },
+      "props": { "resistance": "1k" }
+    }
+  ]
+}
