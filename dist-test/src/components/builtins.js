@@ -84,6 +84,21 @@ const BUILTIN_COMPONENTS = [
         requiredPins: ["in1", "out"],
     },
     {
+        type: "cmos_not",
+        pins: ["in1", "out"],
+        requiredPins: ["in1", "out"],
+    },
+    {
+        type: "cmos_nand",
+        pins: ["in1", "in2", "out"],
+        requiredPins: ["in1", "in2", "out"],
+    },
+    {
+        type: "cmos_nor",
+        pins: ["in1", "in2", "out"],
+        requiredPins: ["in1", "in2", "out"],
+    },
+    {
         type: "mosfet_n",
         pins: ["d", "g", "s", "b"],
         requiredPins: ["d", "g", "s"],

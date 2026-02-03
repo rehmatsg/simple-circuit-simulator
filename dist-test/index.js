@@ -4,6 +4,7 @@ export * from "./src/core/value.js";
 export * from "./src/core/determinism.js";
 export * from "./src/core/circuit.js";
 export * from "./src/core/validation.js";
+export * from "./src/core/expansion.js";
 export * from "./src/components/registry.js";
 export * from "./src/components/builtins.js";
 export * from "./src/serialize/json.js";

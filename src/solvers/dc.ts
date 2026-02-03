@@ -21,6 +21,7 @@ export interface SolveDCOptions {
 const DEFAULT_SHORT_CIRCUIT_THRESHOLD = 10;
 const DEFAULT_NONLINEAR_TOLERANCE = 1e-6;
 const DEFAULT_MAX_ITERATIONS = 50;
+const MOSFET_SMOOTHING = 0.1;
 
 export function solveDC(
   input: Circuit | Netlist,
@@ -493,12 +494,14 @@ function stampMosfet(
 ): void {
   const [drain, source] = element.nodes;
   const gateNode = element.params.gate;
+  const bodyNode = element.params.body;
   const vth = element.params.vth;
   const ron = element.params.ron;
   const roff = element.params.roff;
 
   if (
     typeof gateNode !== "number" ||
+    typeof bodyNode !== "number" ||
     typeof vth !== "number" ||
     typeof ron !== "number" ||
     typeof roff !== "number"
@@ -507,18 +510,17 @@ function stampMosfet(
   }
 
   const vg = nodeVoltage(gateNode, nodeIndex, solution);
-  const vs = nodeVoltage(source, nodeIndex, solution);
-  const vgs = vg - vs;
+  const vb = nodeVoltage(bodyNode, nodeIndex, solution);
 
-  let on = false;
+  let control = 0;
   if (element.type === "mosfet_n") {
-    on = vgs > vth;
+    control = vg - vb - vth;
   } else {
-    const vsg = vs - vg;
-    on = vsg > vth;
+    control = vb - vg - vth;
   }
 
-  const resistance = on ? ron : roff;
+  const alpha = clamp(control / MOSFET_SMOOTHING, 0, 1);
+  const resistance = roff + (ron - roff) * alpha;
   const conductance = 1 / resistance;
   stampConductance(drain, source, conductance, nodeIndex, matrix);
 }

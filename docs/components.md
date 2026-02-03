@@ -60,6 +60,18 @@ Gate NOT:
 - type: `gate_not`
 - pins: `in1`, `out`
 
+CMOS NOT (expands to MOSFET stack):
+- type: `cmos_not`
+- pins: `in1`, `out`
+
+CMOS NAND (expands to MOSFET stack):
+- type: `cmos_nand`
+- pins: `in1`, `in2`, `out`
+
+CMOS NOR (expands to MOSFET stack):
+- type: `cmos_nor`
+- pins: `in1`, `in2`, `out`
+
 Capacitor:
 - type: `capacitor`
 - pins: `a`, `b`
@@ -91,3 +103,5 @@ MOSFET (PMOS):
 Notes:
 - Closed switch is modeled as a resistor with configurable `Ron` (default 1e-3).
 - Open switch is treated as no connection.
+- CMOS gate components (`cmos_*`) are expanded into MOSFET stacks via `expandCmosGates` before DC solving.
+- MOSFET threshold uses `Vgb`/`Vbg` when a body pin is provided; otherwise `Vgs`/`Vsg`.
